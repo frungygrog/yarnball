@@ -10,19 +10,28 @@ class SoulseekClient {
 
   async connect(username, password) {
     try {
-      // Using callback style as required by the library
+      // Make sure username and password are always strings
+      const user = typeof username === 'string' ? username : 'yarnball';
+      const pass = typeof password === 'string' ? password : 'yarnball';
+      
+      console.log(`Connecting to Soulseek with username: ${user}`);
+      
       this.client = await new Promise((resolve, reject) => {
         slsk.connect({
-          username, 
-          password
+          user,
+          pass
         }, (err, client) => {
-          if (err) reject(err);
-          else resolve(client);
+          if (err) {
+            console.error('Connection error:', err);
+            reject(err);
+          } else {
+            resolve(client);
+          }
         });
       });
       
       this.connected = true;
-      console.log('Connected to Soulseek');
+      console.log('Connected to Soulseek successfully');
       return true;
     } catch (error) {
       console.error('Failed to connect to Soulseek:', error);
@@ -35,7 +44,7 @@ class SoulseekClient {
     if (!this.connected || !this.client) {
       throw new Error('Not connected to Soulseek');
     }
-
+  
     const { artist, track, album } = params;
     
     // Create a search query from the track and artist/album info
@@ -44,9 +53,17 @@ class SoulseekClient {
       : `${artist} ${track}`;
     
     try {
-      const results = await this.client.search({
-        req: query,
-        timeout: 10000
+      console.log(`Searching Soulseek for: ${query}`);
+      
+      // Use a promise to handle callback-based API
+      const results = await new Promise((resolve, reject) => {
+        this.client.search({
+          req: query,
+          timeout: 10000
+        }, (err, results) => {
+          if (err) reject(err);
+          else resolve(results);
+        });
       });
       
       // Filter for MP3 files
@@ -82,12 +99,14 @@ class SoulseekClient {
     });
   }
 
-  async downloadTrack({ username, file, size }, downloadPath) {
+  async downloadTrack(trackInfo, downloadPath) {
     if (!this.connected || !this.client) {
       throw new Error('Not connected to Soulseek');
     }
     
     try {
+      const { username, file, size } = trackInfo;
+      
       // Ensure the download directory exists
       if (!fs.existsSync(downloadPath)) {
         fs.mkdirSync(downloadPath, { recursive: true });
@@ -107,7 +126,7 @@ class SoulseekClient {
           file: file,
           user: username,
           size: size
-        }, filePath, (err) => {
+        }, filePath, function(err) {
           if (err) reject(err);
           else resolve();
         });

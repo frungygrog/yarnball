@@ -1,4 +1,4 @@
-\// renderer.js
+// renderer.js
 document.addEventListener('DOMContentLoaded', () => {
     // DOM Elements
     const searchInput = document.getElementById('search-input');

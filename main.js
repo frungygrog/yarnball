@@ -33,7 +33,7 @@ function createWindow() {
   mainWindow.loadFile('index.html');
   
   // For development
-  // mainWindow.webContents.openDevTools();
+  mainWindow.webContents.openDevTools();
 }
 
 app.whenReady().then(() => {
@@ -69,6 +69,7 @@ async function connectToSoulseek() {
     const username = store.get('soulseekUsername') || 'yarnball';
     const password = store.get('soulseekPassword') || 'yarnball';
     
+    console.log(`Attempting to connect to Soulseek as ${username}`);
     await soulseekClient.connect(username, password);
     
     if (mainWindow) {
@@ -162,21 +163,4 @@ ipcMain.handle('save-settings', (event, settings) => {
   }
   
   return true;
-});
-
-// preload.js
-const { contextBridge, ipcRenderer } = require('electron');
-
-contextBridge.exposeInMainWorld('api', {
-  searchLastFm: (query) => ipcRenderer.invoke('search-lastfm', query),
-  searchSoulseek: (params) => ipcRenderer.invoke('search-soulseek', params),
-  downloadTrack: (params) => ipcRenderer.invoke('download-track', params),
-  setDownloadPath: () => ipcRenderer.invoke('set-download-path'),
-  getSettings: () => ipcRenderer.invoke('get-settings'),
-  saveSettings: (settings) => ipcRenderer.invoke('save-settings', settings),
-  onSoulseekStatus: (callback) => {
-    ipcRenderer.on('soulseek-status', (event, status, error) => {
-      callback(status, error);
-    });
-  }
 });
