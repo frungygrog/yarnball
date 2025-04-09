@@ -40,6 +40,7 @@ module.exports = {
         },
         gridTemplateColumns: {
           'repeat-fill-180': 'repeat(auto-fill, minmax(180px, 1fr))',
+          'auto-fill-180': 'repeat(auto-fill, minmax(180px, 1fr))',
         },
         keyframes: {
           "accordion-down": {

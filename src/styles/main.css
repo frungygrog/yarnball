@@ -184,7 +184,7 @@
 
 /* Album and Artist Grids */
 .albums-grid, .artists-grid {
-  @apply grid grid-cols-repeat-fill-[180px] gap-5 mt-5;
+  @apply grid grid-cols-auto-fill-180 gap-5 mt-5;
 }
 
 .album-card, .artist-card {
