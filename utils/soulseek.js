@@ -120,19 +120,38 @@ class SoulseekClient {
         return { success: true, filePath, alreadyExists: true };
       }
       
-      // Download the file
-      await new Promise((resolve, reject) => {
-        this.client.download({
-          file: file,
-          user: username,
-          size: size
-        }, filePath, function(err) {
-          if (err) reject(err);
-          else resolve();
-        });
+      // Download the file - using callback directly without Promise wrapping
+      return new Promise((resolve, reject) => {
+        // The slsk-client library expects the callback as the second argument, not the third
+        try {
+          console.log(`Downloading ${file} from ${username} to ${filePath}`);
+          
+          this.client.download({
+            file,
+            user: username,
+            size
+          }, (err, data) => {
+            if (err) {
+              console.error('Download callback error:', err);
+              reject(err);
+              return;
+            }
+            
+            // Write the data to file
+            try {
+              fs.writeFileSync(filePath, data);
+              console.log(`Successfully saved file to ${filePath}`);
+              resolve({ success: true, filePath });
+            } catch (writeErr) {
+              console.error('Error writing file:', writeErr);
+              reject(writeErr);
+            }
+          });
+        } catch (e) {
+          console.error('Download setup error:', e);
+          reject(e);
+        }
       });
-      
-      return { success: true, filePath };
     } catch (error) {
       console.error('Download error:', error);
       throw error;
