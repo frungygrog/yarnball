@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Download, Loader } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Button } from '../../components/ui/button';
 
 import SongItem from '../common/SongItem';
 
@@ -10,7 +10,8 @@ const AlbumViewSection = ({
   previousSection,
   playSong,
   downloadSong,
-  slskConnected
+  slskConnected,
+  activeSection
 }) => {
   const [tracks, setTracks] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -75,7 +76,7 @@ const AlbumViewSection = ({
   }
 
   return (
-    <div id="album-view-section" className="content-section">
+    <div id="album-view-section" className={`content-section ${activeSection === 'album-view' ? 'active' : ''}`}>
       <div className="album-header">
         <div className="back-button">
           <Button 

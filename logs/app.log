@@ -11,3 +11,99 @@
 2025-04-09 16:06:01 [INFO]: Application ready, initializing
 2025-04-09 16:06:01 [INFO]: Creating main application window
 2025-04-09 16:06:01 [INFO]: Application window created
+2025-04-09 16:07:48 [INFO]: Application ready, initializing
+2025-04-09 16:07:48 [INFO]: Creating main application window
+2025-04-09 16:07:48 [INFO]: Application window created
+2025-04-09 16:12:02 [INFO]: Application ready, initializing
+2025-04-09 16:12:02 [INFO]: Creating main application window
+2025-04-09 16:12:02 [INFO]: Application window created
+2025-04-09 16:12:10 [INFO]: All windows closed
+2025-04-09 16:12:50 [INFO]: Application ready, initializing
+2025-04-09 16:12:50 [INFO]: Creating main application window
+2025-04-09 16:12:50 [INFO]: Application window created
+2025-04-09 16:13:02 [INFO]: Connecting to Soulseek as user: yarnball
+2025-04-09 16:13:02 [INFO]: SlskSearch utility initialized
+2025-04-09 16:13:02 [INFO]: Successfully connected to Soulseek
+2025-04-09 16:13:02 [INFO]: Initializing Last.fm API with key: 0ef47...
+2025-04-09 16:13:02 [INFO]: LastFmAPI initialized with key: 0ef47...
+2025-04-09 16:13:12 [INFO]: Searching Last.fm for tracks: "test"
+2025-04-09 16:13:12 [DEBUG]: Searching for track: "test"
+2025-04-09 16:13:12 [DEBUG]: Found 5 tracks on Last.fm
+2025-04-09 16:13:12 [INFO]: Searching Last.fm for albums: "test"
+2025-04-09 16:13:12 [DEBUG]: Searching for album: "test"
+2025-04-09 16:13:13 [DEBUG]: Found 5 albums on Last.fm
+2025-04-09 16:13:13 [INFO]: Searching Last.fm for artists: "test"
+2025-04-09 16:13:13 [DEBUG]: Searching for artist: "test"
+2025-04-09 16:13:13 [DEBUG]: Found 5 artists on Last.fm
+2025-04-09 16:20:57 [INFO]: All windows closed
+2025-04-09 16:21:00 [INFO]: All windows closed
+2025-04-09 16:21:00 [INFO]: Disconnecting from Soulseek
+2025-04-09 16:22:51 [INFO]: Application ready, initializing
+2025-04-09 16:22:51 [INFO]: Creating main application window
+2025-04-09 16:22:51 [INFO]: Application window created
+2025-04-09 16:24:59 [INFO]: Application ready, initializing
+2025-04-09 16:24:59 [INFO]: Creating main application window
+2025-04-09 16:24:59 [INFO]: Application window created
+2025-04-09 16:26:08 [INFO]: Application ready, initializing
+2025-04-09 16:26:08 [INFO]: Creating main application window
+2025-04-09 16:26:08 [INFO]: Application window created
+2025-04-09 16:30:08 [INFO]: Application ready, initializing
+2025-04-09 16:30:08 [INFO]: Creating main application window
+2025-04-09 16:30:08 [INFO]: Application window created
+2025-04-09 16:37:00 [INFO]: All windows closed
+2025-04-09 16:40:23 [INFO]: Application ready, initializing
+2025-04-09 16:40:23 [INFO]: Creating main application window
+2025-04-09 16:40:23 [INFO]: Application window created
+2025-04-09 16:40:44 [INFO]: Connecting to Soulseek as user: yarnball
+2025-04-09 16:40:45 [INFO]: SlskSearch utility initialized
+2025-04-09 16:40:45 [INFO]: Successfully connected to Soulseek
+2025-04-09 16:40:46 [INFO]: Initializing Last.fm API with key: 0ef47...
+2025-04-09 16:40:46 [INFO]: LastFmAPI initialized with key: 0ef47...
+2025-04-09 16:40:52 [INFO]: Searching Last.fm for tracks: "malice mizer"
+2025-04-09 16:40:52 [DEBUG]: Searching for track: "malice mizer"
+2025-04-09 16:40:52 [DEBUG]: Found 5 tracks on Last.fm
+2025-04-09 16:40:52 [INFO]: Searching Last.fm for albums: "malice mizer"
+2025-04-09 16:40:52 [DEBUG]: Searching for album: "malice mizer"
+2025-04-09 16:40:52 [DEBUG]: Found 5 albums on Last.fm
+2025-04-09 16:40:52 [INFO]: Searching Last.fm for artists: "malice mizer"
+2025-04-09 16:40:52 [DEBUG]: Searching for artist: "malice mizer"
+2025-04-09 16:40:52 [DEBUG]: Found 5 artists on Last.fm
+2025-04-09 16:41:03 [INFO]: Searching Last.fm for tracks: "kendrick lamar"
+2025-04-09 16:41:03 [DEBUG]: Searching for track: "kendrick lamar"
+2025-04-09 16:41:03 [DEBUG]: Found 5 tracks on Last.fm
+2025-04-09 16:41:03 [INFO]: Searching Last.fm for albums: "kendrick lamar"
+2025-04-09 16:41:03 [DEBUG]: Searching for album: "kendrick lamar"
+2025-04-09 16:41:03 [DEBUG]: Found 5 albums on Last.fm
+2025-04-09 16:41:03 [INFO]: Searching Last.fm for artists: "kendrick lamar"
+2025-04-09 16:41:03 [DEBUG]: Searching for artist: "kendrick lamar"
+2025-04-09 16:41:03 [DEBUG]: Found 5 artists on Last.fm
+2025-04-09 16:41:43 [INFO]: Getting album tracks for: "Kendrick Lamar" - "To Pimp a Butterfly"
+2025-04-09 16:41:43 [DEBUG]: Getting album info for: "Kendrick Lamar" - "To Pimp a Butterfly"
+2025-04-09 16:41:43 [DEBUG]: Retrieved album info successfully
+2025-04-09 16:41:55 [INFO]: Getting album tracks for: "Kendrick Lamar" - "To Pimp a Butterfly"
+2025-04-09 16:41:55 [DEBUG]: Getting album info for: "Kendrick Lamar" - "To Pimp a Butterfly"
+2025-04-09 16:41:55 [DEBUG]: Retrieved album info successfully
+2025-04-09 16:42:21 [INFO]: All windows closed
+2025-04-09 16:42:21 [INFO]: Disconnecting from Soulseek
+2025-04-09 16:58:14 [INFO]: Application ready, initializing
+2025-04-09 16:58:14 [INFO]: Creating main application window
+2025-04-09 16:58:14 [INFO]: Application window created
+2025-04-09 16:58:16 [INFO]: Connecting to Soulseek as user: yarnball
+2025-04-09 16:58:16 [INFO]: Initializing Last.fm API with key: 0ef47...
+2025-04-09 16:58:16 [INFO]: LastFmAPI initialized with key: 0ef47...
+2025-04-09 16:58:16 [INFO]: SlskSearch utility initialized
+2025-04-09 16:58:16 [INFO]: Successfully connected to Soulseek
+2025-04-09 16:58:30 [INFO]: Searching Last.fm for tracks: "malice mizer"
+2025-04-09 16:58:30 [DEBUG]: Searching for track: "malice mizer"
+2025-04-09 16:58:30 [DEBUG]: Found 5 tracks on Last.fm
+2025-04-09 16:58:30 [INFO]: Searching Last.fm for albums: "malice mizer"
+2025-04-09 16:58:30 [DEBUG]: Searching for album: "malice mizer"
+2025-04-09 16:58:30 [DEBUG]: Found 5 albums on Last.fm
+2025-04-09 16:58:30 [INFO]: Searching Last.fm for artists: "malice mizer"
+2025-04-09 16:58:30 [DEBUG]: Searching for artist: "malice mizer"
+2025-04-09 16:58:30 [DEBUG]: Found 5 artists on Last.fm
+2025-04-09 16:58:35 [INFO]: Getting album tracks for: "Malice Mizer" - "merveilles"
+2025-04-09 16:58:35 [DEBUG]: Getting album info for: "Malice Mizer" - "merveilles"
+2025-04-09 16:58:36 [DEBUG]: Retrieved album info successfully
+2025-04-09 16:58:51 [INFO]: All windows closed
+2025-04-09 16:58:51 [INFO]: Disconnecting from Soulseek

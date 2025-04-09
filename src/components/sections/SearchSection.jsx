@@ -1,23 +1,24 @@
 import React, { useState } from 'react';
 import { Search } from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Input } from '../../components/ui/input';
+import { Button } from '../../components/ui/button';
+import { Alert, AlertDescription } from '../../components/ui/alert';
 
 import SongItem from '../common/SongItem';
 import AlbumCard from '../common/AlbumCard';
 import ArtistCard from '../common/ArtistCard';
 
-const SearchSection = ({ 
-  setSearchResultsData, 
-  searchResultsData, 
-  loadArtistView, 
+const SearchSection = ({
+  setSearchResultsData,
+  searchResultsData,
+  loadArtistView,
   loadAlbumView,
   playSong,
   downloadSong,
   lastfmInitialized,
   switchSection,
-  showNotification
+  showNotification,
+  activeSection
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
@@ -128,7 +129,7 @@ const SearchSection = ({
   const filteredResults = getFilteredResults();
 
   return (
-    <div id="search-section" className="content-section active">
+    <div id="search-section" className={`content-section ${activeSection === 'search' ? 'active' : ''}`}>
       <div className="search-container">
         <div className="search-input-container">
           <Input

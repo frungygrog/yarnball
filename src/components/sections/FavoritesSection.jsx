@@ -3,13 +3,14 @@ import { Heart } from 'lucide-react';
 
 import ArtistCard from '../common/ArtistCard';
 
-const FavoritesSection = ({ 
+const FavoritesSection = ({
   favoritesData,
   toggleFavoriteArtist,
-  loadArtistView
+  loadArtistView,
+  activeSection
 }) => {
   return (
-    <div id="favorites-section" className="content-section">
+    <div id="favorites-section" className={`content-section ${activeSection === 'favorites' ? 'active' : ''}`}>
       <h2 style={{ textTransform: 'lowercase' }}>Your Favorites</h2>
       
       <div className="favorites-container">

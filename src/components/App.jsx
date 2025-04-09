@@ -290,49 +290,53 @@ const App = () => {
       
       <div className="main-content">
         {activeSection === 'search' && (
-          <SearchSection 
-            setSearchResultsData={setSearchResultsData} 
-            searchResultsData={searchResultsData} 
-            loadArtistView={loadArtistView} 
+          <SearchSection
+            setSearchResultsData={setSearchResultsData}
+            searchResultsData={searchResultsData}
+            loadArtistView={loadArtistView}
             loadAlbumView={loadAlbumView}
             playSong={playSong}
             downloadSong={downloadSong}
             lastfmInitialized={lastfmInitialized}
             switchSection={switchSection}
             showNotification={showNotification}
+            activeSection={activeSection}
           />
         )}
         
         {activeSection === 'library' && (
-          <LibrarySection 
+          <LibrarySection
             libraryData={libraryData}
             loadAlbumView={loadAlbumView}
             loadArtistView={loadArtistView}
             playSong={playSong}
             downloadSong={downloadSong}
+            activeSection={activeSection}
           />
         )}
         
         {activeSection === 'favorites' && (
-          <FavoritesSection 
+          <FavoritesSection
             favoritesData={favoritesData}
             toggleFavoriteArtist={toggleFavoriteArtist}
             loadArtistView={loadArtistView}
+            activeSection={activeSection}
           />
         )}
         
         {activeSection === 'settings' && (
-          <SettingsSection 
+          <SettingsSection
             connectToSoulseek={connectToSoulseek}
             initializeLastFm={initializeLastFm}
             setShowLogsModal={setShowLogsModal}
             slskConnected={slskConnected}
             lastfmInitialized={lastfmInitialized}
+            activeSection={activeSection}
           />
         )}
         
         {activeSection === 'artist-view' && (
-          <ArtistViewSection 
+          <ArtistViewSection
             artist={currentArtist}
             switchSection={switchSection}
             previousSection={previousSection}
@@ -341,17 +345,19 @@ const App = () => {
             loadAlbumView={loadAlbumView}
             playSong={playSong}
             downloadSong={downloadSong}
+            activeSection={activeSection}
           />
         )}
         
         {activeSection === 'album-view' && (
-          <AlbumViewSection 
+          <AlbumViewSection
             album={currentAlbum}
             switchSection={switchSection}
             previousSection={previousSection}
             playSong={playSong}
             downloadSong={downloadSong}
             slskConnected={slskConnected}
+            activeSection={activeSection}
           />
         )}
         

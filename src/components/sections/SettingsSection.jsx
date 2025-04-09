@@ -1,18 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { Save, RefreshCw, File, FolderOpen } from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Label } from '@/components/ui/label';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Input } from '../../components/ui/input';
+import { Button } from '../../components/ui/button';
+import { Checkbox } from '../../components/ui/checkbox';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
+import { Label } from '../../components/ui/label';
+import { Alert, AlertDescription } from '../../components/ui/alert';
 
 const SettingsSection = ({
   connectToSoulseek,
   initializeLastFm,
   setShowLogsModal,
   slskConnected,
-  lastfmInitialized
+  lastfmInitialized,
+  activeSection
 }) => {
   // Form state
   const [username, setUsername] = useState('yarnball');
@@ -92,7 +93,7 @@ const SettingsSection = ({
   };
 
   return (
-    <div id="settings-section" className="content-section">
+    <div id="settings-section" className={`content-section ${activeSection === 'settings' ? 'active' : ''}`}>
       <h2 style={{ textTransform: 'lowercase' }}>Settings</h2>
       
       <div className="settings-container">

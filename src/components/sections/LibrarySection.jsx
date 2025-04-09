@@ -1,22 +1,23 @@
 import React, { useState } from 'react';
 import { Music, Disc, User } from 'lucide-react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
 
 import SongItem from '../common/SongItem';
 import AlbumCard from '../common/AlbumCard';
 import ArtistCard from '../common/ArtistCard';
 
-const LibrarySection = ({ 
+const LibrarySection = ({
   libraryData,
   loadAlbumView,
   loadArtistView,
   playSong,
-  downloadSong
+  downloadSong,
+  activeSection
 }) => {
   const [activeTab, setActiveTab] = useState('saved-songs');
 
   return (
-    <div id="library-section" className="content-section">
+    <div id="library-section" className={`content-section ${activeSection === 'library' ? 'active' : ''}`}>
       <h2 style={{ textTransform: 'lowercase' }}>Your Library</h2>
       
       <Tabs 

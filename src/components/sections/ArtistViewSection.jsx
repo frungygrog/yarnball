@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Heart, Loader } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Button } from '../../components/ui/button';
 
 import SongItem from '../common/SongItem';
 import AlbumCard from '../common/AlbumCard';
@@ -13,7 +13,8 @@ const ArtistViewSection = ({
   favoritesData,
   loadAlbumView,
   playSong,
-  downloadSong
+  downloadSong,
+  activeSection
 }) => {
   const [topTracks, setTopTracks] = useState([]);
   const [albums, setAlbums] = useState([]);
@@ -83,7 +84,7 @@ const ArtistViewSection = ({
   }
 
   return (
-    <div id="artist-view-section" className="content-section">
+    <div id="artist-view-section" className={`content-section ${activeSection === 'artist-view' ? 'active' : ''}`}>
       <div className="artist-header">
         <div className="back-button">
           <Button 
