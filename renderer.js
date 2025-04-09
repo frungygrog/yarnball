@@ -338,87 +338,108 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     async function searchSoulseek(track) {
-      try {
-        soulseekSection.style.display = 'block';
-        soulseekResults.innerHTML = '';
-        soulseekLoading.style.display = 'block';
-        
-        const params = {
-          artist: track.artist,
-          track: track.name,
-          album: track.album || ''
-        };
-        
-        const results = await window.api.searchSoulseek(params);
-        
-        soulseekLoading.style.display = 'none';
-        
-        if (results.length === 0) {
-          soulseekResults.innerHTML = '<li>No results found</li>';
-          return;
-        }
-        
-        soulseekResults.innerHTML = '';
-        results.forEach(result => {
-          const li = document.createElement('li');
-          const filename = result.file.split('\\').pop().split('/').pop();
-          const size = formatFileSize(result.size);
+        try {
+          soulseekSection.style.display = 'block';
+          soulseekResults.innerHTML = '';
+          soulseekLoading.style.display = 'block';
           
-          li.innerHTML = `
-            <div>${filename}</div>
-            <div style="color: #999; font-size: 12px;">
-              Size: ${size} | User: ${result.username} | Score: ${result.score}/8
-            </div>
-          `;
+          const params = {
+            artist: track.artist,
+            track: track.name,
+            album: track.album || ''
+          };
           
-          li.addEventListener('click', () => {
-            downloadTrack(result, track);
+          const results = await window.api.searchSoulseek(params);
+          
+          soulseekLoading.style.display = 'none';
+          
+          if (results.length === 0) {
+            soulseekResults.innerHTML = '<li>No results found</li>';
+            return;
+          }
+          
+          soulseekResults.innerHTML = '';
+          results.forEach(result => {
+            const li = document.createElement('li');
+            const filename = result.file.split('\\').pop().split('/').pop();
+            const size = formatFileSize(result.size);
+            
+            // Log the username to verify it exists
+            console.log(`Result username: ${result.username}`);
+            
+            li.innerHTML = `
+              <div>${filename}</div>
+              <div style="color: #999; font-size: 12px;">
+                Size: ${size} | User: ${result.username} | Score: ${result.score}/8
+              </div>
+            `;
+            
+            li.addEventListener('click', () => {
+              // Make sure to verify result.username exists before passing it to downloadTrack
+              if (!result.username) {
+                console.error('Username is missing from result:', result);
+                soulseekResults.innerHTML = '<li>Error: Unable to download - missing username</li>';
+                return;
+              }
+              
+              downloadTrack(result, track);
+            });
+            
+            soulseekResults.appendChild(li);
           });
-          
-          soulseekResults.appendChild(li);
-        });
-      } catch (error) {
-        console.error('Error searching Soulseek:', error);
-        soulseekLoading.style.display = 'none';
-        soulseekResults.innerHTML = `<li>Error: ${error.message}</li>`;
-      }
+        } catch (error) {
+          console.error('Error searching Soulseek:', error);
+          soulseekLoading.style.display = 'none';
+          soulseekResults.innerHTML = `<li>Error: ${error.message}</li>`;
+        }
     }
     
     async function downloadTrack(result, trackInfo) {
-      try {
-        soulseekResults.innerHTML = '<li>Downloading...</li>';
-        
-        const downloadResult = await window.api.downloadTrack({
-          username: result.username,
-          file: result.file,
-          size: result.size
-        });
-        
-        if (downloadResult.success) {
-          // Add to library
-          const track = {
-            title: trackInfo.name,
-            artist: trackInfo.artist,
-            filePath: downloadResult.filePath,
-            addedAt: new Date().toISOString()
-          };
+        try {
+          soulseekResults.innerHTML = '<li>Downloading...</li>';
           
-          addToLibrary(track);
+          // Use the user property from the result if username is missing
+          const user = result.username || result.user;
           
-          // Play the track
-          playTrack(track);
-          
-          // Show success message
-          if (downloadResult.alreadyExists) {
-            soulseekResults.innerHTML = '<li>Track already downloaded. Playing now.</li>';
-          } else {
-            soulseekResults.innerHTML = '<li>Download complete! Playing now.</li>';
+          if (!user) {
+            console.error('Missing username/user property:', result);
+            soulseekResults.innerHTML = '<li>Error: Unable to download - missing username</li>';
+            return;
           }
+          
+          console.log(`Attempting to download from user: ${user}`);
+          
+          const downloadResult = await window.api.downloadTrack({
+            username: user,  // Pass the user variable here
+            file: result.file,
+            size: result.size
+          });
+          
+          if (downloadResult.success) {
+            // Add to library
+            const track = {
+              title: trackInfo.name,
+              artist: trackInfo.artist,
+              filePath: downloadResult.filePath,
+              addedAt: new Date().toISOString()
+            };
+            
+            addToLibrary(track);
+            
+            // Play the track
+            playTrack(track);
+            
+            // Show success message
+            if (downloadResult.alreadyExists) {
+              soulseekResults.innerHTML = '<li>Track already downloaded. Playing now.</li>';
+            } else {
+              soulseekResults.innerHTML = '<li>Download complete! Playing now.</li>';
+            }
+          }
+        } catch (error) {
+          console.error('Error downloading track:', error);
+          soulseekResults.innerHTML = `<li>Download error: ${error.message}</li>`;
         }
-      } catch (error) {
-        console.error('Error downloading track:', error);
-        soulseekResults.innerHTML = `<li>Download error: ${error.message}</li>`;
-      }
     }
     
     function addToLibrary(track) {

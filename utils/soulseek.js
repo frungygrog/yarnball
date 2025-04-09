@@ -40,7 +40,7 @@ class SoulseekClient {
     }
   }
 
-  async search(params) {
+async search(params) {
     if (!this.connected || !this.client) {
       throw new Error('Not connected to Soulseek');
     }
@@ -66,11 +66,18 @@ class SoulseekClient {
         });
       });
       
-      // Filter for MP3 files
+      // Filter for MP3 files and add username property (from user)
       const filteredResults = results.filter(result => {
         const fileExt = path.extname(result.file).toLowerCase();
+        // The API returns 'user' instead of 'username', so add username property
+        if (result.user) {
+          result.username = result.user;
+        }
+        
         return fileExt === '.mp3';
       });
+      
+      console.log(`Found ${filteredResults.length} MP3 results`);
       
       // Score the results
       const scoredResults = this.scoreResults(filteredResults, { artist, track });
@@ -107,6 +114,15 @@ class SoulseekClient {
     try {
       const { username, file, size } = trackInfo;
       
+      // Use username or fall back to user property if username is missing
+      const user = username || trackInfo.user;
+      
+      if (!user) {
+        throw new Error('Username is missing for download');
+      }
+      
+      console.log(`Downloading file from user: ${user}`);
+      
       // Ensure the download directory exists
       if (!fs.existsSync(downloadPath)) {
         fs.mkdirSync(downloadPath, { recursive: true });
@@ -120,15 +136,14 @@ class SoulseekClient {
         return { success: true, filePath, alreadyExists: true };
       }
       
-      // Download the file - using callback directly without Promise wrapping
+      // Download the file
       return new Promise((resolve, reject) => {
-        // The slsk-client library expects the callback as the second argument, not the third
         try {
-          console.log(`Downloading ${file} from ${username} to ${filePath}`);
+          console.log(`Downloading ${file} from ${user} to ${filePath}`);
           
           this.client.download({
             file,
-            user: username,
+            user,  // Use the user variable which handles both cases
             size
           }, (err, data) => {
             if (err) {
