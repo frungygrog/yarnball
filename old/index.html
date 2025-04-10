@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Last.fm to Soulseek Downloader</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div class="logo">
+        <h2 style="text-transform: lowercase;">YarnBall</h2>
+      </div>
+      <nav class="nav-menu">
+        <ul>
+          <li><a href="#" class="nav-item active" data-section="search"><i class="fas fa-search"></i> <span style="text-transform: lowercase;">Search</span></a></li>
+          <li><a href="#" class="nav-item" data-section="library"><i class="fas fa-music"></i> <span style="text-transform: lowercase;">Library</span></a></li>
+          <li><a href="#" class="nav-item" data-section="favorites"><i class="fas fa-heart"></i> <span style="text-transform: lowercase;">Favorites</span></a></li>
+          <li><a href="#" class="nav-item" data-section="settings"><i class="fas fa-cog"></i> <span style="text-transform: lowercase;">Settings</span></a></li>
+        </ul>
+      </nav>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+      <!-- Search Section -->
+      <div id="search-section" class="content-section active">
+        <div class="search-container">
+          <div class="search-input-container">
+            <input type="text" id="global-search" placeholder="Search for songs, albums, or artists...">
+            <button id="global-search-btn"><i class="fas fa-search"></i></button>
+          </div>
+          <div class="search-filters">
+            <button class="search-filter active" data-filter="all">All</button>
+            <button class="search-filter" data-filter="songs">Songs</button>
+            <button class="search-filter" data-filter="albums">Albums</button>
+            <button class="search-filter" data-filter="artists">Artists</button>
+          </div>
+        </div>
+
+        <div class="search-results-container">
+          <!-- Search results will be displayed here -->
+          <div id="search-status"></div>
+          <div id="search-results"></div>
+        </div>
+      </div>
+
+      <!-- Library Section -->
+      <div id="library-section" class="content-section">
+        <h2 style="text-transform: lowercase;">Your Library</h2>
+        <div class="library-tabs">
+          <button class="library-tab active" data-tab="saved-songs">Saved Songs</button>
+          <button class="library-tab" data-tab="downloaded-albums">Albums</button>
+          <button class="library-tab" data-tab="artists">Artists</button>
+        </div>
+
+        <div id="saved-songs-container" class="library-content active">
+          <!-- Saved songs will be displayed here -->
+          <div class="song-list-headers">
+            <div class="song-number">#</div>
+            <div class="song-info">Title</div>
+            <div class="song-album">Album</div>
+            <div class="song-duration">Duration</div>
+            <div class="song-actions"></div>
+          </div>
+          <div id="saved-songs-list" class="song-list">
+            <!-- Saved songs will be populated here -->
+            <div class="empty-state">
+              <i class="fas fa-music"></i>
+              <p style="text-transform: lowercase;">Your saved songs will appear here</p>
+            </div>
+          </div>
+        </div>
+
+        <div id="downloaded-albums-container" class="library-content">
+          <!-- Albums will be displayed here -->
+          <div id="albums-grid" class="albums-grid">
+            <!-- Albums will be populated here -->
+            <div class="empty-state">
+              <i class="fas fa-compact-disc"></i>
+              <p style="text-transform: lowercase;">Your albums will appear here</p>
+            </div>
+          </div>
+        </div>
+
+        <div id="artists-container" class="library-content">
+          <!-- Artists will be displayed here -->
+          <div id="artists-grid" class="artists-grid">
+            <!-- Artists will be populated here -->
+            <div class="empty-state">
+              <i class="fas fa-user-music"></i>
+              <p style="text-transform: lowercase;">Your favorite artists will appear here</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Favorites Section -->
+      <div id="favorites-section" class="content-section">
+        <h2 style="text-transform: lowercase;">Your Favorites</h2>
+        <div class="favorites-container">
+          <div id="favorite-artists-grid" class="artists-grid">
+            <!-- Favorite artists will be populated here -->
+            <div class="empty-state">
+              <i class="fas fa-heart"></i>
+              <p style="text-transform: lowercase;">Artists you've hearted will appear here</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Artist View Section -->
+      <div id="artist-view-section" class="content-section">
+        <div class="artist-header">
+          <div class="back-button">
+            <button id="back-to-search"><i class="fas fa-arrow-left"></i> Back</button>
+          </div>
+          <div class="artist-info">
+            <h1 id="artist-name" style="text-transform: lowercase;">Artist Name</h1>
+            <button id="favorite-artist" class="heart-btn"><i class="far fa-heart"></i></button>
+          </div>
+        </div>
+
+        <div class="artist-content">
+          <div class="artist-top-songs">
+            <h3 style="text-transform: lowercase;">Top Songs</h3>
+            <div id="artist-songs-list" class="song-list">
+              <!-- Top songs will be populated here -->
+            </div>
+          </div>
+
+          <div class="artist-albums">
+            <h3 style="text-transform: lowercase;">Albums</h3>
+            <div id="artist-albums-grid" class="albums-grid">
+              <!-- Albums will be populated here -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Album View Section -->
+      <div id="album-view-section" class="content-section">
+        <div class="album-header">
+          <div class="back-button">
+            <button id="back-from-album"><i class="fas fa-arrow-left"></i> Back</button>
+          </div>
+          <div class="album-info">
+            <div class="album-cover">
+              <img id="album-cover-img" src="/api/placeholder/200/200" alt="Album Cover">
+            </div>
+            <div class="album-details">
+              <h1 id="album-title" style="text-transform: lowercase;">Album Title</h1>
+              <h3 id="album-artist" style="text-transform: lowercase;">Artist Name</h3>
+              <button id="download-album" class="download-album-btn">Download Album</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="album-content">
+          <div class="album-tracks">
+            <div class="song-list-headers">
+              <div class="song-number">#</div>
+              <div class="song-info" style="text-transform: lowercase;">Title</div>
+              <div class="song-duration" style="text-transform: lowercase;">Duration</div>
+              <div class="song-actions"></div>
+            </div>
+            <div id="album-tracks-list" class="song-list">
+              <!-- Album tracks will be populated here -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Settings Section -->
+      <div id="settings-section" class="content-section">
+        <h2 style="text-transform: lowercase;">Settings</h2>
+        <div class="settings-container">
+          <div class="settings-group">
+            <h3 style="text-transform: lowercase;">Soulseek Connection</h3>
+            <div class="form-group">
+              <label for="username" style="text-transform: lowercase;">Username:</label>
+              <input type="text" id="username" value="yarnball">
+            </div>
+            <div class="form-group">
+              <label for="password" style="text-transform: lowercase;">Password:</label>
+              <input type="password" id="password" value="yarnball">
+            </div>
+            <button id="connect-btn">Connect</button>
+            <p id="connection-status"></p>
+          </div>
+          
+          <div class="settings-group">
+            <h3>Last.fm API Key</h3>
+            <div class="form-group">
+              <input type="text" id="lastfm-key" value="0ef47b7d4d7a5bd325bb2646837b4908">
+              <button id="init-lastfm-btn">Initialize Last.fm API</button>
+              <p id="lastfm-status"></p>
+            </div>
+          </div>
+          
+          <div class="settings-group">
+            <h3 style="text-transform: lowercase;">Download Settings</h3>
+            <div class="form-group">
+              <label for="download-path" style="text-transform: lowercase;">Download Path:</label>
+              <input type="text" id="download-path" disabled>
+              <button id="change-path-btn">Change Path</button>
+            </div>
+            <div class="form-group">
+              <label for="organize-files">
+                <input type="checkbox" id="organize-files" checked>
+                Organize files by Artist/Album
+              </label>
+            </div>
+            <div class="form-group">
+              <label for="preferred-format" style="text-transform: lowercase;">Preferred Format:</label>
+              <select id="preferred-format">
+                <option value="any">Any (Best Available)</option>
+                <option value="flac">FLAC</option>
+                <option value="mp3">MP3</option>
+                <option value="wav">WAV</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="settings-group">
+            <h3 style="text-transform: lowercase;">Debug Logs</h3>
+            <button id="open-logs-btn">View Logs</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Logs Section (Modal) -->
+      <div id="logs-modal" class="modal">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h2 style="text-transform: lowercase;">Debug Logs</h2>
+            <span class="close-modal">&times;</span>
+          </div>
+          <div class="modal-body">
+            <button id="refresh-logs">Refresh Logs</button>
+            <div class="logs-container">
+              <pre id="logs-content"></pre>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Downloads Panel -->
+      <div class="downloads-panel">
+        <div class="panel-header">
+          <h3 style="text-transform: lowercase;">Downloads</h3>
+          <button id="minimize-downloads" class="minimize-btn"><i class="fas fa-chevron-down"></i></button>
+        </div>
+        <div class="downloads-list" id="downloads-container">
+          <!-- Active downloads will be displayed here -->
+          <div class="empty-downloads">
+            <p style="text-transform: lowercase;">No active downloads</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Player Bar -->
+    <div class="player-bar">
+      <div class="now-playing">
+        <div class="track-image">
+          <img id="current-track-image" src="/api/placeholder/60/60" alt="Track Image">
+        </div>
+        <div class="track-info">
+          <div id="current-track-name" class="track-name" style="text-transform: lowercase;">No track playing</div>
+          <div id="current-track-artist" class="track-artist"></div>
+        </div>
+        <button id="favorite-track" class="heart-btn"><i class="far fa-heart"></i></button>
+      </div>
+      
+      <div class="player-controls">
+        <div class="control-buttons">
+          <button id="prev-track" class="control-btn" disabled><i class="fas fa-step-backward"></i></button>
+          <button id="play-pause" class="control-btn play-btn" disabled><i class="fas fa-play"></i></button>
+          <button id="next-track" class="control-btn" disabled><i class="fas fa-step-forward"></i></button>
+        </div>
+        <div class="progress-container">
+          <span id="current-time">0:00</span>
+          <div class="progress-bar">
+            <div class="progress" id="track-progress"></div>
+          </div>
+          <span id="total-time">0:00</span>
+        </div>
+      </div>
+      
+      <div class="volume-controls">
+        <button id="volume-btn" class="volume-btn"><i class="fas fa-volume-up"></i></button>
+        <div class="volume-slider-container">
+          <div class="volume-slider">
+            <div class="volume-progress" id="volume-progress"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="renderer.js"></script>
+</body>
+</html>
