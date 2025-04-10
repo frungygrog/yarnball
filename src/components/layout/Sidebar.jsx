@@ -5,7 +5,15 @@ const Sidebar = ({ navItems, activeSection, onNavItemClick }) => {
   return (
     <div className="sidebar">
       <div className="logo">
-        <h2 style={{ textTransform: 'lowercase' }} className="font-bold italic">YarnBall</h2>
+        <div className="flex items-center gap-2">
+          {/* Import the SVG as an image and set its color to white via CSS */}
+          <img 
+            src="./icon.svg" 
+            alt="YarnBall Logo" 
+            className="w-8 h-8 filter invert brightness-100"
+          />
+          <h2 className="font-bold">yarnball</h2>
+        </div>
       </div>
       <nav className="nav-menu">
         <ul>

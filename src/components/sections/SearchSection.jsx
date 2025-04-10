@@ -19,7 +19,7 @@ const SearchSection = ({
   switchSection,
   showNotification,
   activeSection,
-  libraryData // Add this prop to check if songs are already downloaded
+  libraryData
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
@@ -144,7 +144,8 @@ const SearchSection = ({
   return (
     <div id="search-section" className={`content-section ${activeSection === 'search' ? 'active' : ''}`}>
       <div className="search-container">
-        <div className="search-input-container">
+        {/* Updated search bar container with max-width and relative positioning */}
+        <div className="search-input-container relative max-w-3xl mx-auto">
           <Input
             type="text"
             id="global-search"
@@ -152,63 +153,69 @@ const SearchSection = ({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyPress={handleKeyPress}
+            className="pr-10" // Add padding to the right for the search icon
           />
+          {/* Position search button absolutely inside the input */}
           <Button 
             id="global-search-btn" 
             onClick={handleSearch} 
             disabled={isSearching}
-            className="ml-2"
+            className="absolute right-2 top-1/2 transform -translate-y-1/2 px-2"
+            variant="ghost"
+            size="sm"
           >
             <Search size={18} />
           </Button>
         </div>
-        <div className="search-filters">
+
+        {/* Center the filter buttons */}
+        <div className="search-filters flex justify-center mt-4">
           <Button
             className={`search-filter ${currentFilter === 'all' ? 'active' : ''}`}
             data-filter="all"
             onClick={() => setCurrentFilter('all')}
           >
-            All
+            all
           </Button>
           <Button
             className={`search-filter ${currentFilter === 'songs' ? 'active' : ''}`}
             data-filter="songs"
             onClick={() => setCurrentFilter('songs')}
           >
-            Songs
+            songs
           </Button>
           <Button
             className={`search-filter ${currentFilter === 'albums' ? 'active' : ''}`}
             data-filter="albums"
             onClick={() => setCurrentFilter('albums')}
           >
-            Albums
+            albums
           </Button>
           <Button
             className={`search-filter ${currentFilter === 'artists' ? 'active' : ''}`}
             data-filter="artists"
             onClick={() => setCurrentFilter('artists')}
           >
-            Artists
+            artists
           </Button>
         </div>
       </div>
 
-      <div className="search-results-container">
+      <div className="search-results-container mt-8">
         {searchStatus && (
-          <Alert>
+          <Alert className="mb-6">
             <AlertDescription>{searchStatus}</AlertDescription>
           </Alert>
         )}
 
         {isSearching ? (
-          <div className="loading">Searching Last.fm...</div>
+          <div className="loading">searching last.fm...</div>
         ) : (
-          <div id="search-results">
+          <div id="search-results" className="space-y-10">
             {/* Songs Section */}
             {filteredResults.songs && filteredResults.songs.length > 0 && (
               <div className="results-section songs-section">
-                <h3>Songs</h3>
+                <h3 className="text-lg font-bold mb-4">songs</h3>
                 <div className="song-list">
                   {filteredResults.songs.map(song => (
                     <SongItem
@@ -217,7 +224,7 @@ const SearchSection = ({
                       context="search"
                       onPlay={() => playSong(song, "search")}
                       onDownload={() => downloadSong(song)}
-                      isDownloaded={song.isDownloaded} // Pass the downloaded status
+                      isDownloaded={song.isDownloaded}
                     />
                   ))}
                 </div>
@@ -227,7 +234,7 @@ const SearchSection = ({
             {/* Albums Section */}
             {filteredResults.albums && filteredResults.albums.length > 0 && (
               <div className="results-section albums-section">
-                <h3>Albums</h3>
+                <h3 className="text-lg font-bold mb-4">albums</h3>
                 <div className="albums-grid">
                   {filteredResults.albums.map(album => (
                     <AlbumCard
@@ -243,7 +250,7 @@ const SearchSection = ({
             {/* Artists Section */}
             {filteredResults.artists && filteredResults.artists.length > 0 && (
               <div className="results-section artists-section">
-                <h3>Artists</h3>
+                <h3 className="text-lg font-bold mb-4">artists</h3>
                 <div className="artists-grid">
                   {filteredResults.artists.map(artist => (
                     <ArtistCard

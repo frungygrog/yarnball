@@ -37979,3 +37979,193 @@
 2025-04-10 15:35:11 [INFO]: Searching Last.fm for artists: "shiro sagisu"
 2025-04-10 15:35:11 [DEBUG]: Searching for artist: "shiro sagisu"
 2025-04-10 15:35:11 [DEBUG]: Found 5 artists on Last.fm
+2025-04-10 16:16:45 [INFO]: Application ready, initializing
+2025-04-10 16:16:45 [INFO]: Creating main application window
+2025-04-10 16:16:45 [INFO]: Application window created
+2025-04-10 16:16:48 [INFO]: Connecting to Soulseek as user: yarnball
+2025-04-10 16:16:48 [INFO]: Initializing Last.fm API with key: 0ef47...
+2025-04-10 16:16:48 [INFO]: LastFmAPI initialized with key: 0ef47...
+2025-04-10 16:16:48 [INFO]: SlskSearch utility initialized
+2025-04-10 16:16:48 [INFO]: Successfully connected to Soulseek
+2025-04-10 16:17:23 [INFO]: Application ready, initializing
+2025-04-10 16:17:23 [INFO]: Creating main application window
+2025-04-10 16:17:23 [INFO]: Application window created
+2025-04-10 16:17:25 [INFO]: Connecting to Soulseek as user: yarnball
+2025-04-10 16:17:25 [INFO]: Initializing Last.fm API with key: 0ef47...
+2025-04-10 16:17:25 [INFO]: LastFmAPI initialized with key: 0ef47...
+2025-04-10 16:17:25 [INFO]: SlskSearch utility initialized
+2025-04-10 16:17:25 [INFO]: Successfully connected to Soulseek
+2025-04-10 16:17:42 [INFO]: Application ready, initializing
+2025-04-10 16:17:42 [INFO]: Creating main application window
+2025-04-10 16:17:42 [INFO]: Application window created
+2025-04-10 16:17:43 [INFO]: Connecting to Soulseek as user: yarnball
+2025-04-10 16:17:43 [INFO]: Initializing Last.fm API with key: 0ef47...
+2025-04-10 16:17:43 [INFO]: LastFmAPI initialized with key: 0ef47...
+2025-04-10 16:17:43 [INFO]: SlskSearch utility initialized
+2025-04-10 16:17:43 [INFO]: Successfully connected to Soulseek
+2025-04-10 16:17:45 [INFO]: All windows closed
+2025-04-10 16:17:45 [INFO]: Disconnecting from Soulseek
+2025-04-10 16:18:07 [INFO]: Application ready, initializing
+2025-04-10 16:18:07 [INFO]: Creating main application window
+2025-04-10 16:18:07 [INFO]: Application window created
+2025-04-10 16:18:10 [INFO]: Connecting to Soulseek as user: yarnball
+2025-04-10 16:18:10 [INFO]: Initializing Last.fm API with key: 0ef47...
+2025-04-10 16:18:10 [INFO]: LastFmAPI initialized with key: 0ef47...
+2025-04-10 16:18:10 [INFO]: SlskSearch utility initialized
+2025-04-10 16:18:10 [INFO]: Successfully connected to Soulseek
+2025-04-10 16:18:52 [INFO]: Application ready, initializing
+2025-04-10 16:18:52 [INFO]: Creating main application window
+2025-04-10 16:18:52 [INFO]: Application window created
+2025-04-10 16:18:55 [INFO]: Connecting to Soulseek as user: yarnball
+2025-04-10 16:18:55 [INFO]: Initializing Last.fm API with key: 0ef47...
+2025-04-10 16:18:55 [INFO]: LastFmAPI initialized with key: 0ef47...
+2025-04-10 16:18:55 [INFO]: SlskSearch utility initialized
+2025-04-10 16:18:55 [INFO]: Successfully connected to Soulseek
+2025-04-10 16:22:52 [INFO]: Application ready, initializing
+2025-04-10 16:22:52 [INFO]: Creating main application window
+2025-04-10 16:22:52 [INFO]: Application window created
+2025-04-10 16:22:54 [INFO]: Connecting to Soulseek as user: yarnball
+2025-04-10 16:22:54 [INFO]: Initializing Last.fm API with key: 0ef47...
+2025-04-10 16:22:54 [INFO]: LastFmAPI initialized with key: 0ef47...
+2025-04-10 16:22:54 [INFO]: SlskSearch utility initialized
+2025-04-10 16:22:54 [INFO]: Successfully connected to Soulseek
+2025-04-10 16:24:58 [INFO]: Searching Last.fm for tracks: "nastyona"
+2025-04-10 16:24:58 [DEBUG]: Searching for track: "nastyona"
+2025-04-10 16:24:58 [DEBUG]: Found 5 tracks on Last.fm
+2025-04-10 16:24:58 [INFO]: Searching Last.fm for albums: "nastyona"
+2025-04-10 16:24:58 [DEBUG]: Searching for album: "nastyona"
+2025-04-10 16:24:58 [DEBUG]: Found 5 albums on Last.fm
+2025-04-10 16:24:58 [INFO]: Searching Last.fm for artists: "nastyona"
+2025-04-10 16:24:58 [DEBUG]: Searching for artist: "nastyona"
+2025-04-10 16:24:59 [DEBUG]: Found 5 artists on Last.fm
+2025-04-10 16:28:10 [INFO]: All windows closed
+2025-04-10 16:28:10 [INFO]: Disconnecting from Soulseek
+2025-04-10 16:29:20 [INFO]: Application ready, initializing
+2025-04-10 16:29:20 [INFO]: Creating main application window
+2025-04-10 16:29:20 [INFO]: Application window created
+2025-04-10 16:29:23 [INFO]: Connecting to Soulseek as user: yarnball
+2025-04-10 16:29:23 [INFO]: Initializing Last.fm API with key: 0ef47...
+2025-04-10 16:29:23 [INFO]: LastFmAPI initialized with key: 0ef47...
+2025-04-10 16:29:23 [INFO]: SlskSearch utility initialized
+2025-04-10 16:29:23 [INFO]: Successfully connected to Soulseek
+2025-04-10 16:29:49 [INFO]: Searching Last.fm for tracks: "shadow hat"
+2025-04-10 16:29:49 [DEBUG]: Searching for track: "shadow hat"
+2025-04-10 16:29:49 [DEBUG]: Found 5 tracks on Last.fm
+2025-04-10 16:29:49 [INFO]: Searching Last.fm for albums: "shadow hat"
+2025-04-10 16:29:49 [DEBUG]: Searching for album: "shadow hat"
+2025-04-10 16:29:49 [DEBUG]: Found 5 albums on Last.fm
+2025-04-10 16:29:49 [INFO]: Searching Last.fm for artists: "shadow hat"
+2025-04-10 16:29:49 [DEBUG]: Searching for artist: "shadow hat"
+2025-04-10 16:29:49 [DEBUG]: Found 5 artists on Last.fm
+2025-04-10 16:29:54 [INFO]: Getting album tracks for: "Glenn Gatsby" - "Shadow Hat"
+2025-04-10 16:29:54 [DEBUG]: Getting album info for: "Glenn Gatsby" - "Shadow Hat"
+2025-04-10 16:29:54 [DEBUG]: Retrieved album info successfully
+2025-04-10 16:29:55 [INFO]: Album download request for "Shadow Hat" by "Glenn Gatsby" (2 tracks)
+2025-04-10 16:29:55 [DEBUG]: Created or verified download directory: /home/kevin/Music/yarnball
+2025-04-10 16:29:55 [INFO]: Finding and downloading album "Shadow Hat" by "Glenn Gatsby" with 2 tracks
+2025-04-10 16:29:55 [DEBUG]: Searching for album: "Glenn Gatsby Shadow Hat"
+2025-04-10 16:29:55 [DEBUG]: Starting Soulseek search for: "Glenn Gatsby Shadow Hat"
+2025-04-10 16:30:10 [DEBUG]: Soulseek search complete. Found 21 results
+2025-04-10 16:30:10 [DEBUG]: Analyzing 21 results for album "Shadow Hat" by "Glenn Gatsby"
+2025-04-10 16:30:10 [DEBUG]: Candidate drivingvertigo/[est062] glenn gatsby - shadow hat [2020]: +15 points (file count diff 1)
+2025-04-10 16:30:10 [DEBUG]: Candidate drivingvertigo/[est062] glenn gatsby - shadow hat [2020]: -5 points (inconsistent file types: opus, jpg)
+2025-04-10 16:30:10 [DEBUG]: Candidate drivingvertigo/[est062] glenn gatsby - shadow hat [2020]: +10 points (avg speed 2557311 kbps)
+2025-04-10 16:30:10 [DEBUG]: Candidate drivingvertigo/[est062] glenn gatsby - shadow hat [2020]: +5 points (slots available)
+2025-04-10 16:30:10 [DEBUG]: Candidate drivingvertigo/[est062] glenn gatsby - shadow hat [2020]: Disqualified (only 0 audio tracks found, need at least 1)
+2025-04-10 16:30:10 [DEBUG]: Candidate K1RZA/[est062] glenn gatsby - shadow hat [2020]: -5 points (inconsistent file types: flac, blake3, jpg, txt)
+2025-04-10 16:30:10 [DEBUG]: Candidate K1RZA/[est062] glenn gatsby - shadow hat [2020]: +10 points (avg speed 1737920 kbps)
+2025-04-10 16:30:10 [DEBUG]: Candidate K1RZA/[est062] glenn gatsby - shadow hat [2020]: +5 points (slots available)
+2025-04-10 16:30:10 [DEBUG]: Candidate mothwranger/various artists - 2022 - electro swing - roaring halloween 2022: +15 points (file count diff 1)
+2025-04-10 16:30:10 [DEBUG]: Candidate mothwranger/various artists - 2022 - electro swing - roaring halloween 2022: +20 points (matches preferred format: mp3)
+2025-04-10 16:30:10 [DEBUG]: Candidate mothwranger/various artists - 2022 - electro swing - roaring halloween 2022: +10 points (avg speed 629543 kbps)
+2025-04-10 16:30:10 [DEBUG]: Candidate talis/house 2020  exótics: +15 points (file count diff 1)
+2025-04-10 16:30:10 [DEBUG]: Candidate talis/house 2020  exótics: +20 points (matches preferred format: mp3)
+2025-04-10 16:30:10 [DEBUG]: Candidate talis/house 2020  exótics: +10 points (avg speed 628081 kbps)
+2025-04-10 16:30:10 [DEBUG]: Candidate talis/house 2020  exótics: +5 points (slots available)
+2025-04-10 16:30:10 [DEBUG]: Candidate talis/house 2020  set  techouse exotics: +15 points (file count diff 1)
+2025-04-10 16:30:10 [DEBUG]: Candidate talis/house 2020  set  techouse exotics: +20 points (matches preferred format: mp3)
+2025-04-10 16:30:10 [DEBUG]: Candidate talis/house 2020  set  techouse exotics: +10 points (avg speed 628081 kbps)
+2025-04-10 16:30:10 [DEBUG]: Candidate talis/house 2020  set  techouse exotics: +5 points (slots available)
+2025-04-10 16:30:10 [DEBUG]: Candidate miv2nir/glenn gatsby - shadow hat - single: +15 points (file count diff 1)
+2025-04-10 16:30:10 [DEBUG]: Candidate miv2nir/glenn gatsby - shadow hat - single: -5 points (inconsistent file types: m4a, jpg)
+2025-04-10 16:30:10 [DEBUG]: Candidate miv2nir/glenn gatsby - shadow hat - single: +10 points (avg speed 57313 kbps)
+2025-04-10 16:30:10 [DEBUG]: Candidate miv2nir/glenn gatsby - shadow hat - single: +5 points (slots available)
+2025-04-10 16:30:10 [DEBUG]: Candidate Untapped/shadow hat [webrip]: +15 points (file count diff 1)
+2025-04-10 16:30:10 [DEBUG]: Candidate Untapped/shadow hat [webrip]: +2 points (consistent type: opus, but doesn't match preference mp3)
+2025-04-10 16:30:10 [DEBUG]: Candidate Untapped/shadow hat [webrip]: +10 points (avg speed 2782695 kbps)
+2025-04-10 16:30:10 [DEBUG]: Candidate Untapped/shadow hat [webrip]: +5 points (slots available)
+2025-04-10 16:30:10 [DEBUG]: Candidate Untapped/shadow hat [webrip]: Disqualified (only 0 audio tracks found, need at least 1)
+2025-04-10 16:30:10 [DEBUG]: Candidate Untapped/unknown album: +15 points (file count diff 1)
+2025-04-10 16:30:10 [DEBUG]: Candidate Untapped/unknown album: +2 points (consistent type: opus, but doesn't match preference mp3)
+2025-04-10 16:30:10 [DEBUG]: Candidate Untapped/unknown album: +10 points (avg speed 2782695 kbps)
+2025-04-10 16:30:10 [DEBUG]: Candidate Untapped/unknown album: +5 points (slots available)
+2025-04-10 16:30:10 [DEBUG]: Candidate Untapped/unknown album: Disqualified (only 0 audio tracks found, need at least 1)
+2025-04-10 16:30:10 [INFO]: Found 5 potential sources for complete album
+2025-04-10 16:30:10 [INFO]: Attempting album download from user "talis" (score: 50)
+2025-04-10 16:30:10 [DEBUG]: Starting download for file: @@sygum\complete\Dj Maxx 2015\House 2020  Exótics\Shadow Hat - Glenn Gatsby (Club Mix).mp3
+2025-04-10 16:30:26 [INFO]: Download complete for @@sygum\complete\Dj Maxx 2015\House 2020  Exótics\Shadow Hat - Glenn Gatsby (Club Mix).mp3
+2025-04-10 16:30:26 [INFO]: Successfully downloaded 1/1 tracks from album "Shadow Hat"
+2025-04-10 16:30:26 [INFO]: Getting album tracks for: "Glenn Gatsby" - "Shadow Hat"
+2025-04-10 16:30:26 [DEBUG]: Getting album info for: "Glenn Gatsby" - "Shadow Hat"
+2025-04-10 16:30:26 [DEBUG]: Retrieved album info successfully
+2025-04-10 16:30:30 [INFO]: Request to play local file: /home/kevin/Music/yarnball/Glenn Gatsby/Shadow Hat/Shadow Hat - Glenn Gatsby (Club Mix).mp3
+2025-04-10 16:30:44 [INFO]: Request to play local file: /home/kevin/Music/yarnball/Glenn Gatsby/Shadow Hat/Shadow Hat - Glenn Gatsby (Club Mix).mp3
+2025-04-10 16:31:03 [INFO]: Searching Last.fm for tracks: "shadow hat"
+2025-04-10 16:31:03 [DEBUG]: Searching for track: "shadow hat"
+2025-04-10 16:31:03 [DEBUG]: Found 5 tracks on Last.fm
+2025-04-10 16:31:03 [INFO]: Searching Last.fm for albums: "shadow hat"
+2025-04-10 16:31:03 [DEBUG]: Searching for album: "shadow hat"
+2025-04-10 16:31:04 [DEBUG]: Found 5 albums on Last.fm
+2025-04-10 16:31:04 [INFO]: Searching Last.fm for artists: "shadow hat"
+2025-04-10 16:31:04 [DEBUG]: Searching for artist: "shadow hat"
+2025-04-10 16:31:04 [DEBUG]: Found 5 artists on Last.fm
+2025-04-10 16:31:07 [INFO]: Getting track info for: "Glenn Gatsby" - "Shadow Hat"
+2025-04-10 16:31:07 [DEBUG]: Getting track info for: "Glenn Gatsby" - "Shadow Hat"
+2025-04-10 16:31:07 [DEBUG]: Retrieved track info successfully
+2025-04-10 16:31:07 [INFO]: Download request for "Shadow Hat" by "Glenn Gatsby" from album "Shadow Hat - Single"
+2025-04-10 16:31:07 [DEBUG]: Created or verified download directory: /home/kevin/Music/yarnball
+2025-04-10 16:31:07 [INFO]: Finding and downloading "Shadow Hat" by "Glenn Gatsby" from album "Shadow Hat - Single"
+2025-04-10 16:31:07 [DEBUG]: Searching for artist, album, and song: "Glenn Gatsby Shadow Hat - Single Shadow Hat"
+2025-04-10 16:31:07 [DEBUG]: Starting Soulseek search for: "Glenn Gatsby Shadow Hat - Single Shadow Hat"
+2025-04-10 16:31:17 [DEBUG]: Soulseek search complete. Found 0 results
+2025-04-10 16:31:17 [WARN]: No results found for artist, album, and song. Attempting fallback to album name search.
+2025-04-10 16:31:17 [DEBUG]: Searching Soulseek for album: "Shadow Hat - Single"
+2025-04-10 16:31:17 [DEBUG]: Starting Soulseek search for: "Shadow Hat - Single"
+2025-04-10 16:31:27 [DEBUG]: Soulseek search complete. Found 0 results
+2025-04-10 16:31:27 [WARN]: No results found for album "Shadow Hat - Single". Attempting fallback to album name without capitalization or punctuation.
+2025-04-10 16:31:27 [DEBUG]: Searching Soulseek for cleaned album: "shadow hat  single"
+2025-04-10 16:31:27 [DEBUG]: Starting Soulseek search for: "shadow hat  single"
+2025-04-10 16:31:37 [DEBUG]: Soulseek search complete. Found 0 results
+2025-04-10 16:31:37 [WARN]: No results found for any search attempts
+2025-04-10 16:31:37 [ERROR]: Error in findAndDownloadSong: No results found
+2025-04-10 16:31:37 [ERROR]: Download song error: No results found
+2025-04-10 16:31:45 [INFO]: Searching Last.fm for tracks: "kendrick"
+2025-04-10 16:31:45 [DEBUG]: Searching for track: "kendrick"
+2025-04-10 16:31:45 [DEBUG]: Found 5 tracks on Last.fm
+2025-04-10 16:31:45 [INFO]: Searching Last.fm for albums: "kendrick"
+2025-04-10 16:31:45 [DEBUG]: Searching for album: "kendrick"
+2025-04-10 16:31:45 [DEBUG]: Found 5 albums on Last.fm
+2025-04-10 16:31:45 [INFO]: Searching Last.fm for artists: "kendrick"
+2025-04-10 16:31:45 [DEBUG]: Searching for artist: "kendrick"
+2025-04-10 16:31:45 [DEBUG]: Found 5 artists on Last.fm
+2025-04-10 16:31:50 [INFO]: Getting artist info for: "Kendrick Lamar"
+2025-04-10 16:31:50 [ERROR]: Error getting artist info: lastFmApi.getArtistInfo is not a function
+2025-04-10 16:31:50 [INFO]: Getting top tracks for artist: "Kendrick Lamar"
+2025-04-10 16:31:50 [DEBUG]: Getting top tracks for artist: "Kendrick Lamar"
+2025-04-10 16:31:50 [DEBUG]: Found 10 top tracks for artist "Kendrick Lamar"
+2025-04-10 16:31:50 [INFO]: Getting albums for artist: "Kendrick Lamar"
+2025-04-10 16:31:50 [DEBUG]: Getting albums for artist: "Kendrick Lamar"
+2025-04-10 16:31:50 [DEBUG]: Found 10 albums for artist "Kendrick Lamar"
+2025-04-10 16:31:59 [INFO]: Getting album tracks for: "Kendrick Lamar" - "To Pimp a Butterfly"
+2025-04-10 16:31:59 [DEBUG]: Getting album info for: "Kendrick Lamar" - "To Pimp a Butterfly"
+2025-04-10 16:32:00 [DEBUG]: Retrieved album info successfully
+2025-04-10 16:33:00 [INFO]: Getting artist info for: "Kendrick Lamar"
+2025-04-10 16:33:00 [ERROR]: Error getting artist info: lastFmApi.getArtistInfo is not a function
+2025-04-10 16:33:00 [INFO]: Getting top tracks for artist: "Kendrick Lamar"
+2025-04-10 16:33:00 [DEBUG]: Getting top tracks for artist: "Kendrick Lamar"
+2025-04-10 16:33:00 [DEBUG]: Found 10 top tracks for artist "Kendrick Lamar"
+2025-04-10 16:33:00 [INFO]: Getting albums for artist: "Kendrick Lamar"
+2025-04-10 16:33:00 [DEBUG]: Getting albums for artist: "Kendrick Lamar"
+2025-04-10 16:33:00 [DEBUG]: Found 10 albums for artist "Kendrick Lamar"
+2025-04-10 16:33:11 [INFO]: All windows closed
+2025-04-10 16:33:11 [INFO]: Disconnecting from Soulseek
