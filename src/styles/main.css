@@ -293,43 +293,8 @@
   @apply max-h-[300px] overflow-y-auto p-2;
 }
 
-/* Update the download-item grid layout to include room for speed info */
-/* Add these styles to your src/styles/main.css file */
-
-/* Update the download-item grid layout to include room for speed info */
 .download-item {
-  @apply grid grid-cols-[1fr_100px_100px] gap-3 p-2 rounded mb-1;
-}
-
-/* Add a container for status and speed */
-.download-details {
-  @apply flex flex-col justify-center items-end;
-}
-
-/* Style for the download speed display */
-.download-speed {
-  @apply text-xs text-blue-400 mt-1 font-mono;
-}
-
-/* Update other download panel styles */
-.download-status {
-  @apply text-xs text-muted-foreground;
-}
-
-.download-status.success {
-  @apply text-green-500;
-}
-
-.download-status.error {
-  @apply text-red-500;
-}
-
-.download-progress-container {
-  @apply w-full h-[6px] bg-muted rounded overflow-hidden;
-}
-
-.download-progress-container {
-  @apply w-full h-[6px] bg-muted rounded overflow-hidden;
+  @apply flex items-center gap-2 p-2 rounded mb-1;
 }
 
 .download-info {

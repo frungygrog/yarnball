@@ -25,8 +25,8 @@ function createWindow() {
   logger.info('Creating main application window');
   
   mainWindow = new BrowserWindow({
-    width: 1024,
-    height: 768,
+    width: 1200,
+    height: 800,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
@@ -471,14 +471,13 @@ ipcMain.handle('download-song', async (event, { artist, title, album, downloadId
       // Continue with download if there's an error checking for existing files
     }
 
-    // Track download progress with speed information
-    const progressCallback = (progress, status, speed) => {
+    // Track download progress
+    const progressCallback = (progress, status) => {
       if (mainWindow && !mainWindow.isDestroyed() && downloadId) {
         mainWindow.webContents.send('download-progress', {
           downloadId,
           progress,
-          status,
-          speed
+          status
         });
       }
     };
@@ -567,20 +566,19 @@ ipcMain.handle('download-album', async (event, { artist, albumName, tracks, down
 
     downloadPath = albumDir;
 
-    // Track download progress with speed information
-    const progressCallback = (progress, status, speed) => {
+    // Track download progress
+    const progressCallback = (progress, status) => {
       if (mainWindow && !mainWindow.isDestroyed() && downloadId) {
         mainWindow.webContents.send('album-download-progress', {
           downloadId,
           progress,
-          status,
-          speed
+          status
         });
       }
     };
 
     // Send initial progress update
-    progressCallback(0, 'Searching for album...', 0);
+    progressCallback(0, 'Searching for album...');
 
     // Find and download the album
     const result = await slskSearch.findAndDownloadAlbum(

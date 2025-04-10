@@ -183,9 +183,6 @@ class SlskSearch {
     return new Promise((resolve, reject) => {
       let downloadStarted = false;
       let lastProgress = 0;
-      let lastTransferred = 0;
-      let lastSpeedUpdate = Date.now();
-      let currentSpeed = 0; // Speed in KB/s
       
       const download = this.slskClient.download({
         file: fileInfo,
@@ -193,7 +190,7 @@ class SlskSearch {
       }, (err, data) => {
         if (err) {
           if (progressCallback) {
-            progressCallback(lastProgress, 'Failed', 0);
+            progressCallback(lastProgress, 'Failed');
           }
           logger.error(`Download error: ${err.message}`);
           reject(err);
@@ -201,7 +198,7 @@ class SlskSearch {
         }
         
         if (progressCallback) {
-          progressCallback(100, 'Completed', 0);
+          progressCallback(100, 'Completed');
         }
         
         logger.info(`Download complete for ${fileInfo.file}`);
@@ -220,34 +217,21 @@ class SlskSearch {
             downloadStarted = true;
             const progress = Math.floor((download.status.transferred / download.status.size) * 100);
             lastProgress = progress;
-            
-            // Calculate download speed
-            const now = Date.now();
-            const timeDiff = (now - lastSpeedUpdate) / 1000; // Time difference in seconds
-            
-            if (timeDiff >= 1) { // Update speed every second
-              const bytesTransferred = download.status.transferred - lastTransferred;
-              currentSpeed = Math.round((bytesTransferred / 1024) / timeDiff); // KB/s
-              
-              lastTransferred = download.status.transferred;
-              lastSpeedUpdate = now;
-            }
-            
-            progressCallback(progress, 'Downloading...', currentSpeed);
+            progressCallback(progress, 'Downloading...');
           } else if (download.status.state === 'Connecting') {
-            progressCallback(0, 'Connecting...', 0);
+            progressCallback(0, 'Connecting...');
           } else if (download.status.state === 'Negotiating') {
-            progressCallback(0, 'Negotiating connection...', 0);
+            progressCallback(0, 'Negotiating connection...');
           } else if (download.status.state === 'Initializing') {
-            progressCallback(0, 'Initializing...', 0);
+            progressCallback(0, 'Initializing...');
           } else if (download.status.state === 'Queued') {
-            progressCallback(0, `Queued (${download.status.position} in line)`, 0);
+            progressCallback(0, `Queued (${download.status.position} in line)`);
           } else if (download.status.state === 'Aborted') {
             clearInterval(progressInterval);
             reject(new Error('Download aborted'));
           } else if (download.status.state === 'Completed') {
             clearInterval(progressInterval);
-            progressCallback(100, 'Completed', 0);
+            progressCallback(100, 'Completed');
           }
         }, 500);
       }
@@ -260,7 +244,7 @@ class SlskSearch {
     try {
       // Send initial progress update
       if (progressCallback) {
-        progressCallback(0, 'Searching...', 0);
+        progressCallback(0, 'Searching...');
       }
       
       // First search for artist, album, and song
@@ -298,7 +282,7 @@ class SlskSearch {
       
       // Update progress
       if (progressCallback) {
-        progressCallback(0, 'Found sources, starting download...', 0);
+        progressCallback(0, 'Found sources, starting download...');
       }
       
       logger.info(`Found ${scoredResults.length} potential sources, attempting downloads in order of score`);
@@ -324,7 +308,7 @@ class SlskSearch {
         try {
           // Send progress update
           if (progressCallback) {
-            progressCallback(0, `Downloading from ${fileToDownload.user}...`, 0);
+            progressCallback(0, `Downloading from ${fileToDownload.user}...`);
           }
           
           const data = await this.downloadFile(fileToDownload, filePath, progressCallback);
@@ -357,7 +341,7 @@ class SlskSearch {
     try {
       // Send initial progress update
       if (progressCallback) {
-        progressCallback(0, 'Searching for album...', 0);
+        progressCallback(0, 'Searching for album...');
       }
       
       // First search for the complete album
@@ -387,7 +371,7 @@ class SlskSearch {
       
       // Update progress
       if (progressCallback) {
-        progressCallback(10, 'Found potential album matches, preparing download...', 0);
+        progressCallback(10, 'Found potential album matches, preparing download...');
       }
       
       // Attempt to download the album from the best candidate
@@ -400,7 +384,7 @@ class SlskSearch {
         
         try {
           if (progressCallback) {
-            progressCallback(15, `Downloading album from ${candidate.user}...`, 0);
+            progressCallback(15, `Downloading album from ${candidate.user}...`);
           }
           
           logger.info(`Attempting album download from user "${candidate.user}" (score: ${candidate.score})`);
@@ -423,20 +407,10 @@ class SlskSearch {
               // Update progress for each track
               if (progressCallback) {
                 const overallProgress = 15 + Math.floor((85 * j) / totalTracks);
-                progressCallback(overallProgress, `Downloading track ${j+1}/${totalTracks}...`, 0);
+                progressCallback(overallProgress, `Downloading track ${j+1}/${totalTracks}...`);
               }
               
-              const data = await this.downloadFile(track, filePath, (progress, status, speed) => {
-                if (progressCallback) {
-                  // Calculate overall progress as a combination of track progress and track position
-                  const trackContribution = 85 / totalTracks; // Each track contributes up to this percentage
-                  const trackProgress = progress / 100 * trackContribution; // Progress within this track's contribution
-                  const overallProgress = 15 + (j * trackContribution) + trackProgress;
-                  
-                  // Pass the detailed progress for this specific track
-                  progressCallback(Math.min(99, overallProgress), `Track ${j+1}/${totalTracks}: ${status}`, speed);
-                }
-              });
+              const data = await this.downloadFile(track, filePath);
               
               // Add to our successful downloads
               downloadedTracks.push({
@@ -458,7 +432,7 @@ class SlskSearch {
             
             // Final progress update
             if (progressCallback) {
-              progressCallback(100, `Downloaded ${successfulDownloads}/${totalTracks} tracks`, 0);
+              progressCallback(100, `Downloaded ${successfulDownloads}/${totalTracks} tracks`);
             }
             
             logger.info(`Successfully downloaded ${successfulDownloads}/${totalTracks} tracks from album "${albumTitle}"`);

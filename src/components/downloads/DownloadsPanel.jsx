@@ -11,16 +11,6 @@ const DownloadsPanel = ({ downloads }) => {
     setMinimized(!minimized);
   };
 
-  // Helper function to format download speed
-  const formatSpeed = (speed) => {
-    if (!speed || speed === 0) return '';
-    
-    if (speed >= 1024) {
-      return `${(speed / 1024).toFixed(1)} MB/s`;
-    }
-    return `${speed} KB/s`;
-  };
-
   return (
     <div className={cn("downloads-panel", minimized && "minimized")}>
       <div className="panel-header">
@@ -56,20 +46,12 @@ const DownloadsPanel = ({ downloads }) => {
                 className="download-progress-container"
                 value={download.progress}
               />
-              <div className="download-details">
-                <div className={cn(
-                  "download-status",
-                  download.status === 'Completed' && "success",
-                  download.status === 'Failed' && "error"
-                )}>
-                  {download.status}
-                </div>
-                {/* Display speed if available and downloading */}
-                {download.speed > 0 && download.status.includes('Downloading') && (
-                  <div className="download-speed">
-                    {formatSpeed(download.speed)}
-                  </div>
-                )}
+              <div className={cn(
+                "download-status",
+                download.status === 'Completed' && "success",
+                download.status === 'Failed' && "error"
+              )}>
+                {download.status}
               </div>
             </div>
           ))
