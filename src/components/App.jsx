@@ -13,6 +13,7 @@ import PlayerBar from './player/PlayerBar';
 import DownloadsPanel from './downloads/DownloadsPanel';
 import LogsModal from './modals/LogsModal';
 import Notification from './common/Notification';
+import { generateId } from '../lib/utils';
 
 const App = () => {
   // State variables
@@ -22,6 +23,7 @@ const App = () => {
   const [notification, setNotification] = useState({ show: false, message: '', type: 'info' });
   const [currentArtist, setCurrentArtist] = useState(null);
   const [currentAlbum, setCurrentAlbum] = useState(null);
+  const [currentContext, setCurrentContext] = useState(null);
   const [queue, setQueue] = useState([]);
   const [currentTrackIndex, setCurrentTrackIndex] = useState(-1);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -32,6 +34,9 @@ const App = () => {
   const [slskConnected, setSlskConnected] = useState(false);
   const [lastfmInitialized, setLastfmInitialized] = useState(false);
   const [searchResultsData, setSearchResultsData] = useState({ songs: [], albums: [], artists: [] });
+  const [organizeFiles, setOrganizeFiles] = useState(true);
+  const [preferredFormat, setPreferredFormat] = useState('any');
+  const [downloadPath, setDownloadPath] = useState('');
 
   // Navigation items
   const navItems = [
@@ -46,18 +51,57 @@ const App = () => {
     initApp();
 
     // Setup event listeners
-    window.api.onDownloadProgress((data) => {
+    const downloadProgressHandler = (data) => {
       updateDownloadProgress(data);
-    });
+    };
+
+    const addSongToLibraryHandler = (song) => {
+      addSongToLibrary(song);
+    };
+
+    // Set up event listeners
+    const unsubscribeDownloadProgress = window.api.onDownloadProgress(downloadProgressHandler);
+    const unsubscribeAddSongToLibrary = window.api.addSongToLibrary(addSongToLibraryHandler);
 
     return () => {
-      // Cleanup
+      // Clean up event listeners
+      unsubscribeDownloadProgress();
+      unsubscribeAddSongToLibrary();
+      
+      // Clean up audio
       if (audio) {
         audio.pause();
         audio.src = '';
       }
     };
   }, []);
+
+  // Force refresh of library data on mount
+  useEffect(() => {
+    // Force refresh of library data
+    const savedData = localStorage.getItem('yarnball_library');
+    if (savedData) {
+      try {
+        const parsedData = JSON.parse(savedData);
+        console.log("Manually loaded library data:", parsedData);
+        
+        // Force update the library data state
+        setLibraryData({
+          songs: Array.isArray(parsedData.songs) ? parsedData.songs : [],
+          albums: Array.isArray(parsedData.albums) ? parsedData.albums : [],
+          artists: Array.isArray(parsedData.artists) ? parsedData.artists : []
+        });
+      } catch (error) {
+        console.error("Error parsing library data:", error);
+      }
+    }
+  }, []);
+
+  // Debug logging for library data changes
+  useEffect(() => {
+    // Log the current library data when it changes
+    console.log("Current library data:", libraryData);
+  }, [libraryData]);
 
   // Initialize the app
   const initApp = async () => {
@@ -67,7 +111,7 @@ const App = () => {
     // Get download path
     try {
       const path = await window.api.getDownloadPath();
-      // Set path in settings
+      setDownloadPath(path);
     } catch (error) {
       console.error('Error getting download path:', error);
     }
@@ -88,12 +132,24 @@ const App = () => {
       // Auto-initialize Last.fm API if key exists
       initializeLastFm(savedApiKey);
     }
+
+    // Load settings
+    const savedOrganizeFiles = localStorage.getItem('yarnball_organize_files');
+    if (savedOrganizeFiles !== null) {
+      setOrganizeFiles(savedOrganizeFiles === 'true');
+    }
+
+    const savedFormat = localStorage.getItem('yarnball_preferred_format');
+    if (savedFormat) {
+      setPreferredFormat(savedFormat);
+    }
   };
 
   // Switch between sections
   const switchSection = (sectionName) => {
     setPreviousSection(activeSection);
     setActiveSection(sectionName);
+    console.log(`Switched to section: ${sectionName}`);
   };
 
   // Connect to Soulseek
@@ -154,8 +210,132 @@ const App = () => {
   };
 
   // Play a song
-  const playSong = (song, context) => {
-    // Implementation for playing songs
+  const playSong = async (song, context) => {
+    console.log(`Playing song: ${song.name} by ${song.artist} in context: ${context}`);
+    
+    // If playing from a new context, create a new queue
+    if (context !== currentContext) {
+      // Get all songs from the current context
+      let songs = [];
+      
+      if (context === 'search') {
+        songs = searchResultsData.songs;
+      } else if (context === 'album') {
+        // For albums, get songs from current album
+        try {
+          const tracks = await window.api.getAlbumTracks(song.artist, currentAlbum.name);
+          songs = tracks.map((track, index) => ({
+            id: track.mbid || generateId(),
+            name: track.name,
+            artist: song.artist,
+            album: currentAlbum.name,
+            number: index + 1,
+            duration: track.duration,
+            image: currentAlbum.image,
+            path: libraryData.songs.find(s => 
+              s.name.toLowerCase() === track.name.toLowerCase() && 
+              s.artist.toLowerCase() === song.artist.toLowerCase()
+            )?.path // Get path from library if available
+          }));
+        } catch(error) {
+          console.error("Error loading album tracks:", error);
+          songs = [song];
+        }
+      } else if (context === 'artist') {
+        // For artists, use current artist's top songs
+        try {
+          const tracks = await window.api.getArtistTopTracks(song.artist);
+          songs = tracks.map((track, index) => ({
+            id: track.mbid || generateId(),
+            name: track.name,
+            artist: song.artist,
+            number: index + 1,
+            duration: track.duration,
+            image: currentArtist?.image,
+            path: libraryData.songs.find(s => 
+              s.name.toLowerCase() === track.name.toLowerCase() && 
+              s.artist.toLowerCase() === song.artist.toLowerCase()
+            )?.path
+          }));
+        } catch(error) {
+          console.error("Error loading artist tracks:", error);
+          songs = [song];
+        }
+      } else if (context === 'library') {
+        songs = libraryData.songs;
+        console.log("Using library songs for queue:", songs);
+      }
+      
+      // Set the queue and context
+      console.log(`Setting queue with ${songs.length} songs from ${context} context`);
+      setQueue([...songs]);
+      setCurrentContext(context);
+    }
+    
+    // Find the index of the song in the queue
+    const songIndex = queue.findIndex(s => s.id === song.id);
+    
+    if (songIndex === -1) {
+      // If song not found in queue, add it
+      console.log("Song not found in queue, adding it");
+      setQueue(prevQueue => [...prevQueue, song]);
+      setCurrentTrackIndex(queue.length);
+    } else {
+      console.log(`Song found in queue at index ${songIndex}`);
+      setCurrentTrackIndex(songIndex);
+    }
+    
+    // Stop current audio if exists
+    if (audio) {
+      audio.pause();
+      audio.src = '';
+      setAudio(null);
+    }
+    
+    // Create new audio element
+    const newAudio = new Audio();
+    
+    // Update player UI first to show something is happening
+    // Set up the audio once it's loaded
+    if (song.path) {
+      try {
+        console.log(`Attempting to play file: ${song.path}`);
+        // Request playing the local file through the main process
+        const audioPath = await window.api.playLocalFile(song.path);
+        
+        // Create audio element with the proper file URL
+        newAudio.src = audioPath;
+        console.log(`Audio source set to: ${audioPath}`);
+        
+        // Set up event listeners
+        newAudio.addEventListener('loadedmetadata', () => {
+          console.log(`Audio metadata loaded, duration: ${newAudio.duration}`);
+        });
+        
+        newAudio.addEventListener('timeupdate', () => {
+          // Update progress
+        });
+        
+        newAudio.addEventListener('ended', () => {
+          console.log("Audio playback ended, playing next track");
+          playNextTrack();
+        });
+        
+        // Start playback
+        await newAudio.play();
+        console.log("Audio playback started");
+        setIsPlaying(true);
+        setAudio(newAudio);
+      } catch (error) {
+        console.error('Error playing local file:', error);
+        showNotification(`Error playing file: ${error.message}`, 'error');
+      }
+    } else {
+      // Need to download the song first
+      console.log("Song needs to be downloaded before playing");
+      showNotification('This song needs to be downloaded before it can be played', 'info');
+      downloadSong(song);
+    }
   };
 
   // Update download progress
@@ -178,36 +358,226 @@ const App = () => {
 
   // Download a song
   const downloadSong = async (song) => {
-    // Implementation for downloading songs
+    if (!slskConnected) {
+      showNotification('Please connect to Soulseek first', 'error');
+      switchSection('settings');
+      return;
+    }
+    
+    try {
+      // Add to downloads
+      const downloadId = generateId();
+      const download = {
+        id: downloadId,
+        songId: song.id,
+        name: song.name,
+        artist: song.artist,
+        album: song.album,
+        progress: 0,
+        status: 'Searching...',
+        image: song.image,
+        startTime: Date.now()
+      };
+      
+      setDownloads(prev => [...prev, download]);
+      
+      // If album is not known, try to get it
+      let albumTitle = song.album;
+      if (!albumTitle) {
+        try {
+          const trackInfo = await window.api.getTrackInfo({ 
+            artist: song.artist, 
+            track: song.name 
+          });
+          albumTitle = trackInfo.album?.title || "Unknown Album";
+          // Update download with album info
+          setDownloads(prev => prev.map(d => 
+            d.id === downloadId ? { ...d, album: albumTitle } : d
+          ));
+        } catch (error) {
+          console.error('Error getting track info:', error);
+        }
+      }
+      
+      // Start download
+      const result = await window.api.downloadSong({
+        artist: song.artist,
+        title: song.name,
+        album: albumTitle || "Unknown Album",
+        downloadId: downloadId,
+        organize: organizeFiles,
+        preferredFormat: preferredFormat
+      });
+      
+      // Update download status
+      setDownloads(prev => 
+        prev.map(d => d.id === downloadId 
+          ? { ...d, status: 'Completed', progress: 100, path: result.path } 
+          : d
+        )
+      );
+      
+      // Add to library
+      addSongToLibrary({
+        ...song,
+        album: albumTitle || "Unknown Album",
+        path: result.path,
+        format: result.format || 'Unknown'
+      });
+      
+      showNotification(`Downloaded: ${song.name} by ${song.artist}`, 'success');
+      
+      return result;
+    } catch (error) {
+      console.error('Error downloading song:', error);
+      
+      // Update download status
+      setDownloads(prev => 
+        prev.map(d => d.songId === song.id
+          ? { ...d, status: 'Failed', error: error.message }
+          : d
+        )
+      );
+      
+      showNotification(`Download failed: ${error.message}`, 'error');
+      throw error;
+    }
   };
 
   // Toggle favorite artist
   const toggleFavoriteArtist = (artist) => {
-    // Implementation for toggling favorite artists
+    setFavoritesData(prev => {
+      const index = prev.artists.findIndex(a => a.id === artist.id);
+      
+      if (index === -1) {
+        // Add to favorites
+        const newFavorites = {
+          ...prev,
+          artists: [...prev.artists, artist]
+        };
+        // Save to localStorage
+        localStorage.setItem('yarnball_favorites', JSON.stringify(newFavorites));
+        return newFavorites;
+      } else {
+        // Remove from favorites
+        const newFavorites = {
+          ...prev,
+          artists: prev.artists.filter(a => a.id !== artist.id)
+        };
+        // Save to localStorage
+        localStorage.setItem('yarnball_favorites', JSON.stringify(newFavorites));
+        return newFavorites;
+      }
+    });
   };
 
   // Toggle favorite song
   const toggleFavoriteSong = (song) => {
-    // Implementation for toggling favorite songs
+    setFavoritesData(prev => {
+      const index = prev.songs.findIndex(s => s.id === song.id);
+      
+      if (index === -1) {
+        // Add to favorites
+        const newFavorites = {
+          ...prev,
+          songs: [...prev.songs, song]
+        };
+        // Save to localStorage
+        localStorage.setItem('yarnball_favorites', JSON.stringify(newFavorites));
+        return newFavorites;
+      } else {
+        // Remove from favorites
+        const newFavorites = {
+          ...prev,
+          songs: prev.songs.filter(s => s.id !== song.id)
+        };
+        // Save to localStorage
+        localStorage.setItem('yarnball_favorites', JSON.stringify(newFavorites));
+        return newFavorites;
+      }
+    });
+  };
+
+  // Toggle play/pause
+  const togglePlayPause = () => {
+    if (!audio) return;
+    
+    if (isPlaying) {
+      audio.pause();
+      setIsPlaying(false);
+    } else {
+      audio.play();
+      setIsPlaying(true);
+    }
+  };
+
+  // Play previous track
+  const playPreviousTrack = () => {
+    if (queue.length === 0) return;
+    
+    // If current time is more than 3 seconds, restart current track
+    if (audio && audio.currentTime > 3) {
+      audio.currentTime = 0;
+      return;
+    }
+    
+    let newIndex = currentTrackIndex - 1;
+    if (newIndex < 0) {
+      newIndex = queue.length - 1;
+    }
+    
+    setCurrentTrackIndex(newIndex);
+    playSong(queue[newIndex], currentContext);
+  };
+
+  // Play next track
+  const playNextTrack = () => {
+    if (queue.length === 0) return;
+    
+    let newIndex = currentTrackIndex + 1;
+    if (newIndex >= queue.length) {
+      newIndex = 0;
+    }
+    
+    setCurrentTrackIndex(newIndex);
+    playSong(queue[newIndex], currentContext);
   };
 
   // Load library data from localStorage
   const loadLibraryData = () => {
+    console.log("Loading library data...");
     const savedData = localStorage.getItem('yarnball_library');
     
     if (savedData) {
       try {
-        setLibraryData(JSON.parse(savedData));
+        const parsedData = JSON.parse(savedData);
+        console.log("Library data loaded:", parsedData);
+        
+        // Make sure we have valid arrays
+        const sanitizedData = {
+          songs: Array.isArray(parsedData.songs) ? parsedData.songs : [],
+          albums: Array.isArray(parsedData.albums) ? parsedData.albums : [],
+          artists: Array.isArray(parsedData.artists) ? parsedData.artists : []
+        };
+        
+        // Log the sanitized data
+        console.log("Sanitized library data:", sanitizedData);
+        
+        setLibraryData(sanitizedData);
       } catch (error) {
         console.error('Error parsing library data:', error);
         setLibraryData({ songs: [], albums: [], artists: [] });
       }
+    } else {
+      console.log("No library data found in localStorage");
+      setLibraryData({ songs: [], albums: [], artists: [] });
     }
   };
 
   // Save library data to localStorage
-  const saveLibraryData = () => {
-    localStorage.setItem('yarnball_library', JSON.stringify(libraryData));
+  const saveLibraryData = (data) => {
+    console.log("Saving library data to localStorage:", data);
+    localStorage.setItem('yarnball_library', JSON.stringify(data));
   };
 
   // Load favorites data from localStorage
@@ -224,18 +594,31 @@ const App = () => {
     }
   };
 
-  // Save favorites data to localStorage
-  const saveFavoritesData = () => {
-    localStorage.setItem('yarnball_favorites', JSON.stringify(favoritesData));
+  // Update settings
+  const updateSettings = (settings) => {
+    if (settings.organizeFiles !== undefined) {
+      setOrganizeFiles(settings.organizeFiles);
+      localStorage.setItem('yarnball_organize_files', settings.organizeFiles);
+    }
+    
+    if (settings.preferredFormat) {
+      setPreferredFormat(settings.preferredFormat);
+      localStorage.setItem('yarnball_preferred_format', settings.preferredFormat);
+    }
   };
 
   // Add song to library
   const addSongToLibrary = (song) => {
+    console.log("Adding song to library:", song);
+    
     setLibraryData(prev => {
       // Check if song already exists
       if (prev.songs.some(s => s.id === song.id)) {
+        console.log("Song already exists in library, skipping");
         return prev;
       }
+      
+      console.log("Song doesn't exist in library, adding it");
       
       // Create new library data with song added
       const newLibraryData = {
@@ -249,6 +632,7 @@ const App = () => {
         a.name.toLowerCase() === song.album.toLowerCase() && 
         a.artist.toLowerCase() === song.artist.toLowerCase()
       )) {
+        console.log("Adding new album to library:", song.album);
         newLibraryData.albums.push({
           id: generateId(),
           name: song.album,
@@ -261,6 +645,7 @@ const App = () => {
       if (!newLibraryData.artists.some(a => 
         a.name.toLowerCase() === song.artist.toLowerCase()
       )) {
+        console.log("Adding new artist to library:", song.artist);
         newLibraryData.artists.push({
           id: generateId(),
           name: song.artist,
@@ -269,15 +654,11 @@ const App = () => {
       }
       
       // Save to localStorage
-      localStorage.setItem('yarnball_library', JSON.stringify(newLibraryData));
+      console.log("Saving updated library data");
+      saveLibraryData(newLibraryData);
       
       return newLibraryData;
     });
-  };
-
-  // Helper function to generate ID
-  const generateId = () => {
-    return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
   };
 
   return (
@@ -331,6 +712,10 @@ const App = () => {
             setShowLogsModal={setShowLogsModal}
             slskConnected={slskConnected}
             lastfmInitialized={lastfmInitialized}
+            downloadPath={downloadPath}
+            organizeFiles={organizeFiles}
+            preferredFormat={preferredFormat}
+            updateSettings={updateSettings}
             activeSection={activeSection}
           />
         )}
@@ -372,6 +757,10 @@ const App = () => {
         isPlaying={isPlaying}
         toggleFavoriteSong={toggleFavoriteSong}
         favoritesData={favoritesData}
+        onTogglePlayPause={togglePlayPause}
+        onPrevTrack={playPreviousTrack}
+        onNextTrack={playNextTrack}
+        audio={audio}
       />
       
       {showLogsModal && (

@@ -3,6 +3,7 @@ import { Play, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const SongItem = ({ song, includeAlbum = false, context = 'search', onPlay, onDownload }) => {
+  // Format time function inside component
   const formatTime = (seconds) => {
     if (!seconds) return '--:--';
     
@@ -13,18 +14,23 @@ const SongItem = ({ song, includeAlbum = false, context = 'search', onPlay, onDo
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
 
-  const duration = song.duration ? formatTime(song.duration) : '--:--';
+  // Handle potential undefined values gracefully
+  const songName = song?.name || 'Unknown';
+  const songArtist = song?.artist || 'Unknown';
+  const songAlbum = song?.album || 'Unknown Album';
+  const songNumber = song?.number || '-';
+  const duration = song?.duration ? formatTime(song.duration) : '--:--';
 
   return (
-    <div className="song-item" data-id={song.id} data-context={context}>
-      <div className="song-number">{song.number || '-'}</div>
+    <div className="song-item" data-id={song?.id} data-context={context}>
+      <div className="song-number">{songNumber}</div>
       <div className="song-info">
-        <div className="song-title">{song.name}</div>
-        <div className="song-artist">{song.artist}</div>
+        <div className="song-title">{songName}</div>
+        <div className="song-artist">{songArtist}</div>
       </div>
       
       {includeAlbum && (
-        <div className="song-album">{song.album || '-'}</div>
+        <div className="song-album">{songAlbum}</div>
       )}
       
       <div className="song-duration">{duration}</div>
@@ -33,7 +39,11 @@ const SongItem = ({ song, includeAlbum = false, context = 'search', onPlay, onDo
           variant="ghost" 
           size="icon" 
           className="song-play-btn" 
-          onClick={onPlay}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (onPlay) onPlay();
+          }}
         >
           <Play size={16} />
         </Button>
@@ -41,7 +51,11 @@ const SongItem = ({ song, includeAlbum = false, context = 'search', onPlay, onDo
           variant="ghost" 
           size="icon" 
           className="song-download-btn" 
-          onClick={onDownload}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (onDownload) onDownload();
+          }}
         >
           <Download size={16} />
         </Button>

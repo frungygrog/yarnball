@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Save, RefreshCw, File, FolderOpen } from 'lucide-react';
-import { Input } from '../../components/ui/input';
-import { Button } from '../../components/ui/button';
-import { Checkbox } from '../../components/ui/checkbox';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
-import { Label } from '../../components/ui/label';
-import { Alert, AlertDescription } from '../../components/ui/alert';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const SettingsSection = ({
   connectToSoulseek,
@@ -13,15 +13,18 @@ const SettingsSection = ({
   setShowLogsModal,
   slskConnected,
   lastfmInitialized,
+  downloadPath,
+  organizeFiles,
+  preferredFormat,
+  updateSettings,
   activeSection
 }) => {
   // Form state
   const [username, setUsername] = useState('yarnball');
   const [password, setPassword] = useState('yarnball');
   const [lastfmKey, setLastfmKey] = useState('0ef47b7d4d7a5bd325bb2646837b4908');
-  const [downloadPath, setDownloadPath] = useState('');
-  const [organizeFiles, setOrganizeFiles] = useState(true);
-  const [preferredFormat, setPreferredFormat] = useState('any');
+  const [localOrganizeFiles, setLocalOrganizeFiles] = useState(organizeFiles);
+  const [localPreferredFormat, setLocalPreferredFormat] = useState(preferredFormat);
   
   // Status messages
   const [connectionStatus, setConnectionStatus] = useState('');
@@ -37,11 +40,10 @@ const SettingsSection = ({
     if (savedPassword) setPassword(savedPassword);
     if (savedApiKey) setLastfmKey(savedApiKey);
     
-    // Get download path
-    window.api.getDownloadPath()
-      .then(path => setDownloadPath(path))
-      .catch(err => console.error('Error getting download path:', err));
-  }, []);
+    // Update local state with props
+    setLocalOrganizeFiles(organizeFiles);
+    setLocalPreferredFormat(preferredFormat);
+  }, [organizeFiles, preferredFormat]);
 
   // Handle Soulseek connection
   const handleConnectSoulseek = async () => {
@@ -83,13 +85,24 @@ const SettingsSection = ({
   const handleChangeDownloadPath = async () => {
     try {
       const path = await window.api.selectDownloadPath();
-      
       if (path) {
-        setDownloadPath(path);
+        // This would require a prop function to update the download path in the parent
       }
     } catch (error) {
       console.error('Error changing download path:', error);
     }
+  };
+
+  // Handle organize files change
+  const handleOrganizeFilesChange = (checked) => {
+    setLocalOrganizeFiles(checked);
+    updateSettings({ organizeFiles: checked });
+  };
+
+  // Handle preferred format change
+  const handlePreferredFormatChange = (value) => {
+    setLocalPreferredFormat(value);
+    updateSettings({ preferredFormat: value });
   };
 
   return (
@@ -200,8 +213,8 @@ const SettingsSection = ({
             <div className="flex items-center space-x-2">
               <Checkbox 
                 id="organize-files" 
-                checked={organizeFiles} 
-                onCheckedChange={setOrganizeFiles} 
+                checked={localOrganizeFiles} 
+                onCheckedChange={handleOrganizeFilesChange} 
               />
               <Label htmlFor="organize-files">
                 Organize files by Artist/Album
@@ -213,8 +226,8 @@ const SettingsSection = ({
             <Label htmlFor="preferred-format" style={{ textTransform: 'lowercase' }}>Preferred Format:</Label>
             <Select 
               id="preferred-format" 
-              value={preferredFormat} 
-              onValueChange={setPreferredFormat}
+              value={localPreferredFormat} 
+              onValueChange={handlePreferredFormatChange}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select format" />

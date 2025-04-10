@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
+import { formatTime } from '../../lib/utils';
 
 const PlayerBar = ({ 
   currentTrackIndex, 
@@ -11,7 +12,8 @@ const PlayerBar = ({
   favoritesData,
   onTogglePlayPause,
   onPrevTrack,
-  onNextTrack
+  onNextTrack,
+  audio
 }) => {
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -21,33 +23,56 @@ const PlayerBar = ({
   const currentTrack = currentTrackIndex >= 0 && queue.length > 0 ? queue[currentTrackIndex] : null;
   const isFavorite = currentTrack ? favoritesData.songs.some(s => s.id === currentTrack.id) : false;
 
-  // Format time for display (e.g., 3:45)
-  const formatTime = (seconds) => {
-    if (!seconds) return '0:00';
+  // Update audio element when it changes
+  useEffect(() => {
+    if (!audio) return;
     
-    seconds = Math.floor(seconds);
-    const minutes = Math.floor(seconds / 60);
-    seconds = seconds % 60;
+    // Set initial volume
+    audio.volume = isMuted ? 0 : volume;
     
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
-  };
+    // Set up event listeners
+    const handleTimeUpdate = () => {
+      setCurrentTime(audio.currentTime);
+      setDuration(audio.duration || 0);
+    };
+    
+    audio.addEventListener('timeupdate', handleTimeUpdate);
+    audio.addEventListener('loadedmetadata', handleTimeUpdate);
+    
+    return () => {
+      audio.removeEventListener('timeupdate', handleTimeUpdate);
+      audio.removeEventListener('loadedmetadata', handleTimeUpdate);
+    };
+  }, [audio, volume, isMuted]);
 
   // Handle volume change
-  const handleVolumeChange = (newVolume) => {
+  const handleVolumeChange = (values) => {
+    const newVolume = values[0];
     setVolume(newVolume);
     setIsMuted(newVolume === 0);
-    // Apply volume to audio element
+    
+    if (audio) {
+      audio.volume = newVolume;
+    }
   };
 
   // Toggle mute
   const handleToggleMute = () => {
-    setIsMuted(!isMuted);
-    // Apply mute to audio element
+    const newMutedState = !isMuted;
+    setIsMuted(newMutedState);
+    
+    if (audio) {
+      audio.volume = newMutedState ? 0 : volume;
+    }
   };
 
   // Handle progress bar click
-  const handleProgressChange = (newProgress) => {
-    // Apply progress to audio element
+  const handleProgressChange = (values) => {
+    const newPosition = values[0];
+    if (audio && duration > 0) {
+      audio.currentTime = newPosition;
+      setCurrentTime(newPosition);
+    }
   };
 
   return (
@@ -57,7 +82,7 @@ const PlayerBar = ({
           <img 
             id="current-track-image" 
             src={currentTrack?.image || '/api/placeholder/60/60'} 
-            alt="Track Image" 
+            alt="Track" 
           />
         </div>
         <div className="track-info">
@@ -122,10 +147,11 @@ const PlayerBar = ({
           <Slider
             className="progress-bar"
             min={0}
-            max={duration}
+            max={duration || 100}
             step={1}
             value={[currentTime]}
-            onValueChange={(values) => handleProgressChange(values[0])}
+            onValueChange={handleProgressChange}
+            disabled={!currentTrack}
           />
           <span id="total-time">{formatTime(duration)}</span>
         </div>
@@ -148,7 +174,7 @@ const PlayerBar = ({
             max={1}
             step={0.01}
             value={[isMuted ? 0 : volume]}
-            onValueChange={(values) => handleVolumeChange(values[0])}
+            onValueChange={handleVolumeChange}
           />
         </div>
       </div>
