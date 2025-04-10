@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Save, RefreshCw, File, FolderOpen } from 'lucide-react';
+import { Save, RefreshCw, File, FolderOpen, Eye, EyeOff, HardDriveDownload } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -25,6 +25,8 @@ const SettingsSection = ({
   const [lastfmKey, setLastfmKey] = useState('0ef47b7d4d7a5bd325bb2646837b4908');
   const [localOrganizeFiles, setLocalOrganizeFiles] = useState(organizeFiles);
   const [localPreferredFormat, setLocalPreferredFormat] = useState(preferredFormat);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showApiKey, setShowApiKey] = useState(false);
   
   // Status messages
   const [connectionStatus, setConnectionStatus] = useState('');
@@ -116,22 +118,37 @@ const SettingsSection = ({
           
           <div className="form-group mt-4 mb-4">
             <Label htmlFor="username">username:</Label>
-            <Input
-              type="text"
-              id="username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-            />
+            <div className="w-2/5">
+              <Input
+                type="text"
+                id="username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+              />
+            </div>
           </div>
           
           <div className="form-group mb-4">
             <Label htmlFor="password">password:</Label>
-            <Input
-              type="password"
-              id="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
+            <div className="w-2/5">
+              <div className="relative">
+                <Input
+                  type={showPassword ? "text" : "password"}
+                  id="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="pr-10" /* Add padding to the right to make room for the icon */
+                />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-1 top-1/2 transform -translate-y-1/2 h-8 w-8"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </Button>
+              </div>
+            </div>
           </div>
           
           <Button 
@@ -141,12 +158,12 @@ const SettingsSection = ({
             {slskConnected ? (
               <>
                 <RefreshCw size={16} className="mr-2" />
-                Reconnect
+                reconnect
               </>
             ) : (
               <>
                 <Save size={16} className="mr-2" />
-                Connect
+                connect
               </>
             )}
           </Button>
@@ -163,19 +180,35 @@ const SettingsSection = ({
           <h3 className="font-bold">last.fm API key</h3>
           
           <div className="form-group mt-4 mb-4">
-            <Input
-              type="text"
-              id="lastfm-key"
-              value={lastfmKey}
-              onChange={(e) => setLastfmKey(e.target.value)}
-            />
+            <div className="w-2/5">
+              <div className="relative">
+                <Input
+                  type={showApiKey ? "text" : "password"}
+                  id="lastfm-key"
+                  value={lastfmKey}
+                  onChange={(e) => setLastfmKey(e.target.value)}
+                  className="pr-10" /* Add padding to the right to make room for the icon */
+                />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-1 top-1/2 transform -translate-y-1/2 h-8 w-8"
+                  onClick={() => setShowApiKey(!showApiKey)}
+                >
+                  {showApiKey ? <EyeOff size={16} /> : <Eye size={16} />}
+                </Button>
+              </div>
+            </div>
             
             <Button 
               id="init-lastfm-btn" 
               onClick={handleInitLastFm}
-              className="mt-2"
+              className="mt-4"
             >
-              Initialize Last.fm API
+              <>
+                <HardDriveDownload size={16} className="mr-2" />
+                initialize
+              </>
             </Button>
             
             {lastfmStatus && (
@@ -192,7 +225,7 @@ const SettingsSection = ({
           
           <div className="form-group mt-4 mb-4">
             <Label htmlFor="download-path">download path:</Label>
-            <div className="flex">
+            <div className="flex w-2/5">
               <Input
                 type="text"
                 id="download-path"
@@ -217,28 +250,30 @@ const SettingsSection = ({
                 onCheckedChange={handleOrganizeFilesChange} 
               />
               <Label htmlFor="organize-files">
-                organize files by artist/album:
+                organize files by artist/album
               </Label>
             </div>
           </div>
           
           <div className="form-group mb-4">
             <Label htmlFor="preferred-format">preferred format:</Label>
-            <Select 
-              id="preferred-format" 
-              value={localPreferredFormat} 
-              onValueChange={handlePreferredFormatChange}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="select format" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="any">any format</SelectItem>
-                <SelectItem value="flac">.flac</SelectItem>
-                <SelectItem value="mp3">.mp3</SelectItem>
-                <SelectItem value="wav">.wav</SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="w-2/5">
+              <Select 
+                id="preferred-format" 
+                value={localPreferredFormat} 
+                onValueChange={handlePreferredFormatChange}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="select format" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="any">any format</SelectItem>
+                  <SelectItem value="flac">.flac</SelectItem>
+                  <SelectItem value="mp3">.mp3</SelectItem>
+                  <SelectItem value="wav">.wav</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </div>
         

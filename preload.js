@@ -24,6 +24,7 @@ contextBridge.exposeInMainWorld('api', {
   getDownloadPath: () => ipcRenderer.invoke('get-download-path'),
   selectDownloadPath: () => ipcRenderer.invoke('select-download-path'),
   playLocalFile: (filePath) => ipcRenderer.invoke('play-local-file', filePath),
+  deleteFile: (filePath) => ipcRenderer.invoke('delete-file', filePath), // Add the delete function
 
   // Logs
   getLogs: () => ipcRenderer.invoke('get-logs'),

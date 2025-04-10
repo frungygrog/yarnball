@@ -365,6 +365,17 @@ const App = () => {
     }
     
     try {
+      // NEW: Check if the song is already in the library
+      const existingSong = libraryData.songs.find(s => 
+        s.name.toLowerCase() === song.name.toLowerCase() && 
+        s.artist.toLowerCase() === song.artist.toLowerCase()
+      );
+  
+      if (existingSong) {
+        showNotification(`"${song.name}" is already in your library`, 'info');
+        return;
+      }
+      
       // Add to downloads
       const downloadId = generateId();
       const download = {
@@ -409,13 +420,28 @@ const App = () => {
         preferredFormat: preferredFormat
       });
       
-      // Update download status
-      setDownloads(prev => 
-        prev.map(d => d.id === downloadId 
-          ? { ...d, status: 'Completed', progress: 100, path: result.path } 
-          : d
-        )
-      );
+      // Check if the file already existed (new property returned by main process)
+      if (result.alreadyExists) {
+        // Update download status
+        setDownloads(prev => 
+          prev.map(d => d.id === downloadId 
+            ? { ...d, status: 'Already Exists', progress: 100, path: result.path } 
+            : d
+          )
+        );
+        
+        showNotification(`"${song.name}" already exists and has been added to your library`, 'info');
+      } else {
+        // Update download status for a new download
+        setDownloads(prev => 
+          prev.map(d => d.id === downloadId 
+            ? { ...d, status: 'Completed', progress: 100, path: result.path } 
+            : d
+          )
+        );
+        
+        showNotification(`Downloaded: ${song.name} by ${song.artist}`, 'success');
+      }
       
       // Add to library
       addSongToLibrary({
@@ -424,8 +450,6 @@ const App = () => {
         path: result.path,
         format: result.format || 'Unknown'
       });
-      
-      showNotification(`Downloaded: ${song.name} by ${song.artist}`, 'success');
       
       return result;
     } catch (error) {
@@ -442,33 +466,6 @@ const App = () => {
       showNotification(`Download failed: ${error.message}`, 'error');
       throw error;
     }
-  };
-
-  // Toggle favorite artist
-  const toggleFavoriteArtist = (artist) => {
-    setFavoritesData(prev => {
-      const index = prev.artists.findIndex(a => a.id === artist.id);
-      
-      if (index === -1) {
-        // Add to favorites
-        const newFavorites = {
-          ...prev,
-          artists: [...prev.artists, artist]
-        };
-        // Save to localStorage
-        localStorage.setItem('yarnball_favorites', JSON.stringify(newFavorites));
-        return newFavorites;
-      } else {
-        // Remove from favorites
-        const newFavorites = {
-          ...prev,
-          artists: prev.artists.filter(a => a.id !== artist.id)
-        };
-        // Save to localStorage
-        localStorage.setItem('yarnball_favorites', JSON.stringify(newFavorites));
-        return newFavorites;
-      }
-    });
   };
 
   // Toggle favorite song
@@ -612,12 +609,19 @@ const App = () => {
     console.log("Adding song to library:", song);
     
     setLibraryData(prev => {
-      // Check if song already exists
+      // First check if we already have this exact song ID
       if (prev.songs.some(s => s.id === song.id)) {
-        console.log("Song already exists in library, skipping");
+        console.log("Song already exists in library (same ID), skipping");
         return prev;
       }
       
+      // Next check if we already have a song with the same file path
+      // This prevents file system duplicates
+      if (song.path && prev.songs.some(s => s.path === song.path)) {
+        return prev;
+      }
+      
+      // If unique by both ID and path, add it to the library
       console.log("Song doesn't exist in library, adding it");
       
       // Create new library data with song added
@@ -661,6 +665,32 @@ const App = () => {
     });
   };
 
+  const toggleFavoriteArtist = (artist) => {
+    setFavoritesData(prev => {
+      const index = prev.artists.findIndex(a => a.id === artist.id);
+      
+      if (index === -1) {
+        // Add to favorites
+        const newFavorites = {
+          ...prev,
+          artists: [...prev.artists, artist]
+        };
+        // Save to localStorage
+        localStorage.setItem('yarnball_favorites', JSON.stringify(newFavorites));
+        return newFavorites;
+      } else {
+        // Remove from favorites
+        const newFavorites = {
+          ...prev,
+          artists: prev.artists.filter(a => a.id !== artist.id)
+        };
+        // Save to localStorage
+        localStorage.setItem('yarnball_favorites', JSON.stringify(newFavorites));
+        return newFavorites;
+      }
+    });
+  };
+
   return (
     <div className="app-container">
       <Sidebar 
@@ -693,6 +723,8 @@ const App = () => {
             playSong={playSong}
             downloadSong={downloadSong}
             activeSection={activeSection}
+            setLibraryData={setLibraryData} // Add this prop
+            showNotification={showNotification} 
           />
         )}
         

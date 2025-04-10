@@ -14,7 +14,7 @@ const DownloadsPanel = ({ downloads }) => {
   return (
     <div className={cn("downloads-panel", minimized && "minimized")}>
       <div className="panel-header">
-        <h3 style={{ textTransform: 'lowercase' }}>Downloads</h3>
+        <h3>downloads</h3>
         <Button 
           id="minimize-downloads" 
           variant="ghost" 
@@ -28,7 +28,7 @@ const DownloadsPanel = ({ downloads }) => {
       <div className="downloads-list" id="downloads-container">
         {downloads.length === 0 ? (
           <div className="empty-downloads">
-            <p style={{ textTransform: 'lowercase' }}>No active downloads</p>
+            <p>no active downloads.</p>
           </div>
         ) : (
           // Add downloads in reverse order (newest first)

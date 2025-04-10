@@ -78,35 +78,42 @@ const PlayerBar = ({
   return (
     <div className="player-bar">
       <div className="now-playing">
-        <div className="track-image">
-          <img 
-            id="current-track-image" 
-            src={currentTrack?.image || '/api/placeholder/60/60'} 
-            alt="Track" 
-          />
-        </div>
-        <div className="track-info">
-          <div 
-            id="current-track-name" 
-            className="track-name"
-            style={{ textTransform: 'lowercase' }}
-          >
-            {currentTrack?.name || 'No track playing'}
+        {currentTrack ? (
+          <>
+            <div className="track-image">
+              <img 
+                id="current-track-image" 
+                src={currentTrack?.image || '/api/placeholder/60/60'} 
+                alt="Track" 
+              />
+            </div>
+            <div className="track-info">
+              <div 
+                id="current-track-name" 
+                className="track-name"
+                style={{ textTransform: 'lowercase' }}
+              >
+                {currentTrack?.name}
+              </div>
+              <div id="current-track-artist" className="track-artist">
+                {currentTrack?.artist}
+              </div>
+            </div>
+            <Button 
+              id="favorite-track" 
+              variant="ghost" 
+              size="icon" 
+              className={`heart-btn ${isFavorite ? 'active' : ''}`}
+              onClick={() => toggleFavoriteSong(currentTrack)}
+            >
+              <Heart size={16} className={isFavorite ? 'fill-current' : ''} />
+            </Button>
+          </>
+        ) : (
+          <div className="track-info">
+            <div className="track-name">no track selected</div>
           </div>
-          <div id="current-track-artist" className="track-artist">
-            {currentTrack?.artist || ''}
-          </div>
-        </div>
-        <Button 
-          id="favorite-track" 
-          variant="ghost" 
-          size="icon" 
-          className={`heart-btn ${isFavorite ? 'active' : ''}`}
-          disabled={!currentTrack}
-          onClick={() => currentTrack && toggleFavoriteSong(currentTrack)}
-        >
-          <Heart size={16} className={isFavorite ? 'fill-current' : ''} />
-        </Button>
+        )}
       </div>
       
       <div className="player-controls">

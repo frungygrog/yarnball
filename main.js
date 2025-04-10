@@ -342,7 +342,61 @@ ipcMain.handle('get-logs', async () => {
   }
 });
 
-// Download song from Soulseek using Last.fm metadata and scoring system
+ipcMain.handle('delete-file', async (event, filePath) => {
+  logger.info(`Request to delete file: ${filePath}`);
+  
+  // Verify the file exists
+  if (!fs.existsSync(filePath)) {
+    logger.error(`File not found: ${filePath}`);
+    throw new Error('File not found');
+  }
+  
+  try {
+    // Make sure the file is in the allowed directory (for security)
+    const homeDir = app.getPath('home');
+    const yarnballDir = path.join(homeDir, 'Music', 'yarnball');
+    const normalizedPath = path.normalize(filePath);
+    
+    // Only allow deleting files within the yarnball directory
+    if (!normalizedPath.startsWith(yarnballDir)) {
+      logger.error(`Security error: Attempted to delete file outside of yarnball directory: ${filePath}`);
+      throw new Error('Security error: Cannot delete files outside of the music directory');
+    }
+    
+    // Delete the file
+    fs.unlinkSync(filePath);
+    logger.info(`File deleted successfully: ${filePath}`);
+    
+    // Check if we need to clean up empty directories
+    const dirPath = path.dirname(filePath);
+    if (dirPath !== yarnballDir) {
+      // Check if directory is empty
+      const files = fs.readdirSync(dirPath);
+      if (files.length === 0) {
+        // Directory is empty, delete it
+        fs.rmdirSync(dirPath);
+        logger.info(`Empty directory removed: ${dirPath}`);
+        
+        // Check if parent directory (artist) is now empty
+        const parentDirPath = path.dirname(dirPath);
+        if (parentDirPath !== yarnballDir) {
+          const parentFiles = fs.readdirSync(parentDirPath);
+          if (parentFiles.length === 0) {
+            // Parent directory is empty, delete it
+            fs.rmdirSync(parentDirPath);
+            logger.info(`Empty artist directory removed: ${parentDirPath}`);
+          }
+        }
+      }
+    }
+    
+    return { success: true, message: `File deleted: ${path.basename(filePath)}` };
+  } catch (error) {
+    logger.error(`Error deleting file: ${error.message}`);
+    throw error;
+  }
+});
+
 ipcMain.handle('download-song', async (event, { artist, title, album, downloadId, organize, preferredFormat }) => {
   logger.info(`Download request for "${title}" by "${artist}" from album "${album}"`);
 
@@ -382,6 +436,39 @@ ipcMain.handle('download-song', async (event, { artist, title, album, downloadId
       fs.mkdirSync(albumDir, { recursive: true });
 
       downloadPath = albumDir;
+    }
+
+    // NEW CODE: Check if this song already exists in the directory
+    // This prevents file system duplicates
+    let existingFile = null;
+    
+    // Check if the song already exists in the download directory
+    try {
+      const files = fs.readdirSync(downloadPath);
+      const sanitizedTitle = sanitizeFileName(title).toLowerCase();
+      
+      // Look for files that match the title (case insensitive)
+      existingFile = files.find(file => {
+        const fileName = path.basename(file, path.extname(file)).toLowerCase();
+        return fileName.includes(sanitizedTitle);
+      });
+      
+      if (existingFile) {
+        const existingPath = path.join(downloadPath, existingFile);
+        logger.info(`Song already exists in directory: ${existingPath}`);
+        
+        // Return the existing file instead of downloading again
+        return {
+          success: true,
+          message: `Song "${title}" by "${artist}" already exists at ${existingPath}`,
+          path: existingPath,
+          format: path.extname(existingPath).substring(1),
+          alreadyExists: true
+        };
+      }
+    } catch (err) {
+      logger.warn(`Error checking for existing files: ${err.message}`);
+      // Continue with download if there's an error checking for existing files
     }
 
     // Track download progress
