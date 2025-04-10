@@ -484,3 +484,53 @@
     @apply w-full;
   }
 }
+
+/* Custom Scrollbar Styles */
+
+/* For Webkit browsers (Chrome, Safari, newer Edge) */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: hsl(var(--muted));
+  border-radius: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--accent));
+  border-radius: 8px;
+  border: 2px solid hsl(var(--muted));
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--primary));
+}
+
+/* For Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--accent)) hsl(var(--muted));
+}
+
+/* Targeting specific scrollable areas */
+.main-content,
+.downloads-list,
+.logs-container,
+.song-list,
+.albums-grid,
+.artists-grid {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--accent)) hsl(var(--muted));
+}
+
+/* Optional: Hide scrollbar but keep functionality */
+.hide-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;  /* Chrome, Safari and Opera */
+}

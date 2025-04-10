@@ -12371,3 +12371,56 @@
 2025-04-09 22:55:19 [INFO]: Getting albums for artist: "Kendrick Lamar"
 2025-04-09 22:55:19 [DEBUG]: Getting albums for artist: "Kendrick Lamar"
 2025-04-09 22:55:19 [DEBUG]: Found 10 albums for artist "Kendrick Lamar"
+2025-04-09 23:00:47 [INFO]: Application ready, initializing
+2025-04-09 23:00:47 [INFO]: Creating main application window
+2025-04-09 23:00:47 [INFO]: Application window created
+2025-04-09 23:00:49 [INFO]: Connecting to Soulseek as user: yarnball
+2025-04-09 23:00:49 [INFO]: Initializing Last.fm API with key: 0ef47...
+2025-04-09 23:00:49 [INFO]: LastFmAPI initialized with key: 0ef47...
+2025-04-09 23:00:49 [INFO]: SlskSearch utility initialized
+2025-04-09 23:00:49 [INFO]: Successfully connected to Soulseek
+2025-04-09 23:00:52 [INFO]: All windows closed
+2025-04-09 23:00:52 [INFO]: Disconnecting from Soulseek
+2025-04-09 23:01:03 [INFO]: Application ready, initializing
+2025-04-09 23:01:03 [INFO]: Creating main application window
+2025-04-09 23:01:03 [INFO]: Application window created
+2025-04-09 23:01:03 [INFO]: Connecting to Soulseek as user: yarnball
+2025-04-09 23:01:03 [INFO]: Initializing Last.fm API with key: 0ef47...
+2025-04-09 23:01:03 [INFO]: LastFmAPI initialized with key: 0ef47...
+2025-04-09 23:01:03 [INFO]: SlskSearch utility initialized
+2025-04-09 23:01:03 [INFO]: Successfully connected to Soulseek
+2025-04-09 23:02:43 [INFO]: Application ready, initializing
+2025-04-09 23:02:43 [INFO]: Creating main application window
+2025-04-09 23:02:43 [INFO]: Application window created
+2025-04-09 23:02:45 [INFO]: Connecting to Soulseek as user: yarnball
+2025-04-09 23:02:45 [INFO]: Initializing Last.fm API with key: 0ef47...
+2025-04-09 23:02:45 [INFO]: LastFmAPI initialized with key: 0ef47...
+2025-04-09 23:02:45 [INFO]: SlskSearch utility initialized
+2025-04-09 23:02:45 [INFO]: Successfully connected to Soulseek
+2025-04-09 23:04:20 [INFO]: All windows closed
+2025-04-09 23:04:20 [INFO]: Disconnecting from Soulseek
+2025-04-09 23:04:34 [INFO]: Application ready, initializing
+2025-04-09 23:04:34 [INFO]: Creating main application window
+2025-04-09 23:04:34 [INFO]: Application window created
+2025-04-09 23:04:36 [INFO]: Connecting to Soulseek as user: yarnball
+2025-04-09 23:04:36 [INFO]: Initializing Last.fm API with key: 0ef47...
+2025-04-09 23:04:36 [INFO]: LastFmAPI initialized with key: 0ef47...
+2025-04-09 23:04:36 [INFO]: SlskSearch utility initialized
+2025-04-09 23:04:36 [INFO]: Successfully connected to Soulseek
+2025-04-09 23:05:44 [INFO]: Application ready, initializing
+2025-04-09 23:05:44 [INFO]: Creating main application window
+2025-04-09 23:05:44 [INFO]: Application window created
+2025-04-09 23:05:45 [INFO]: Connecting to Soulseek as user: yarnball
+2025-04-09 23:05:45 [INFO]: Initializing Last.fm API with key: 0ef47...
+2025-04-09 23:05:45 [INFO]: LastFmAPI initialized with key: 0ef47...
+2025-04-09 23:05:46 [INFO]: SlskSearch utility initialized
+2025-04-09 23:05:46 [INFO]: Successfully connected to Soulseek
+2025-04-09 23:05:57 [INFO]: Searching Last.fm for tracks: "malice mizer"
+2025-04-09 23:05:57 [DEBUG]: Searching for track: "malice mizer"
+2025-04-09 23:05:58 [DEBUG]: Found 5 tracks on Last.fm
+2025-04-09 23:05:58 [INFO]: Searching Last.fm for albums: "malice mizer"
+2025-04-09 23:05:58 [DEBUG]: Searching for album: "malice mizer"
+2025-04-09 23:05:58 [DEBUG]: Found 5 albums on Last.fm
+2025-04-09 23:05:58 [INFO]: Searching Last.fm for artists: "malice mizer"
+2025-04-09 23:05:58 [DEBUG]: Searching for artist: "malice mizer"
+2025-04-09 23:05:58 [DEBUG]: Found 5 artists on Last.fm
