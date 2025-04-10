@@ -200,11 +200,11 @@
 }
 
 .album-info, .artist-info {
-  @apply p-4;
+  /* Padding controlled by JSX */
 }
 
 .album-title, .artist-name {
-  @apply font-medium mb-1 whitespace-nowrap overflow-hidden text-ellipsis;
+  @apply font-medium whitespace-nowrap overflow-hidden text-ellipsis; /* Removed mb-1 */
 }
 
 .album-artist {

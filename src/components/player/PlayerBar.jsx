@@ -13,7 +13,9 @@ const PlayerBar = ({
   onTogglePlayPause,
   onPrevTrack,
   onNextTrack,
-  audio
+  audio,
+  loadAlbumView,  // Add prop
+  loadArtistView // Add prop
 }) => {
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -27,10 +29,8 @@ const PlayerBar = ({
   useEffect(() => {
     if (!audio) return;
     
-    // Set initial volume
     audio.volume = isMuted ? 0 : volume;
     
-    // Set up event listeners
     const handleTimeUpdate = () => {
       setCurrentTime(audio.currentTime);
       setDuration(audio.duration || 0);
@@ -50,20 +50,14 @@ const PlayerBar = ({
     const newVolume = values[0];
     setVolume(newVolume);
     setIsMuted(newVolume === 0);
-    
-    if (audio) {
-      audio.volume = newVolume;
-    }
+    if (audio) audio.volume = newVolume;
   };
 
   // Toggle mute
   const handleToggleMute = () => {
     const newMutedState = !isMuted;
     setIsMuted(newMutedState);
-    
-    if (audio) {
-      audio.volume = newMutedState ? 0 : volume;
-    }
+    if (audio) audio.volume = newMutedState ? 0 : volume;
   };
 
   // Handle progress bar click
@@ -75,36 +69,83 @@ const PlayerBar = ({
     }
   };
 
+  // --- Navigation Handlers ---
+  const handleArtistClick = () => {
+    if (currentTrack && currentTrack.artist && loadArtistView) {
+      // Pass necessary info to loadArtistView
+      // Ensure the artist object has at least a 'name' property
+      loadArtistView({ name: currentTrack.artist, image: currentTrack.image }); 
+    } else {
+       console.warn("Cannot navigate to artist: Missing track, artist name, or loadArtistView function.");
+    }
+  };
+
+  const handleTrackClick = () => {
+    if (currentTrack && currentTrack.album && currentTrack.artist && loadAlbumView) {
+      // Pass necessary info to loadAlbumView
+      // Ensure the album object has 'name', 'artist', and optionally 'image'
+      loadAlbumView({ 
+        name: currentTrack.album, 
+        artist: currentTrack.artist, 
+        image: currentTrack.image 
+      });
+    } else {
+      console.warn("Cannot navigate to album: Missing track, album name, artist name, or loadAlbumView function.");
+    }
+  };
+  // --- End Navigation Handlers ---
+
   return (
     <div className="player-bar">
       <div className="now-playing">
         {currentTrack ? (
           <>
             <div className="track-image">
-              <img 
-                id="current-track-image" 
-                src={currentTrack?.image || '/api/placeholder/60/60'} 
-                alt="Track" 
-              />
+              {/* Make image clickable to go to album view */}
+              <button 
+                onClick={handleTrackClick} 
+                disabled={!currentTrack.album || !loadAlbumView}
+                className="bg-transparent border-none p-0 cursor-pointer disabled:cursor-default"
+                title={currentTrack.album ? `Go to album: ${currentTrack.album}` : ""}
+              >
+                <img 
+                  id="current-track-image" 
+                  src={currentTrack?.image || '/api/placeholder/60/60'} 
+                  alt="Track" 
+                  className="block w-[60px] h-[60px]" // Ensure image size is consistent
+                />
+              </button>
             </div>
             <div className="track-info">
-              <div 
+              {/* Make track name clickable */}
+              <button 
                 id="current-track-name" 
-                className="track-name"
+                className="track-name text-left bg-transparent border-none p-0 cursor-pointer hover:underline disabled:cursor-default disabled:no-underline"
                 style={{ textTransform: 'lowercase' }}
+                onClick={handleTrackClick}
+                disabled={!currentTrack.album || !loadAlbumView}
+                title={currentTrack.album ? `Go to album: ${currentTrack.album}` : ""}
               >
-                {currentTrack?.name}
-              </div>
-              <div id="current-track-artist" className="track-artist">
-                {currentTrack?.artist}
-              </div>
+                {currentTrack?.name || "Unknown Track"}
+              </button>
+              {/* Make artist name clickable */}
+              <button 
+                id="current-track-artist" 
+                className="track-artist text-left bg-transparent border-none p-0 cursor-pointer hover:underline disabled:cursor-default disabled:no-underline"
+                onClick={handleArtistClick}
+                disabled={!currentTrack.artist || !loadArtistView}
+                title={currentTrack.artist ? `Go to artist: ${currentTrack.artist}` : ""}
+              >
+                {currentTrack?.artist || "Unknown Artist"}
+              </button>
             </div>
             <Button 
               id="favorite-track" 
               variant="ghost" 
               size="icon" 
-              className={`heart-btn ${isFavorite ? 'active' : ''}`}
+              className={`heart-btn ${isFavorite ? 'active' : ''} ml-2`} // Added margin
               onClick={() => toggleFavoriteSong(currentTrack)}
+              title={isFavorite ? "Remove from favorites" : "Add to favorites"}
             >
               <Heart size={16} className={isFavorite ? 'fill-current' : ''} />
             </Button>
@@ -116,36 +157,16 @@ const PlayerBar = ({
         )}
       </div>
       
+      {/* Player Controls remain the same */}
       <div className="player-controls">
         <div className="control-buttons">
-          <Button 
-            id="prev-track" 
-            variant="ghost" 
-            size="icon" 
-            className="control-btn" 
-            disabled={!currentTrack}
-            onClick={onPrevTrack}
-          >
+          <Button id="prev-track" variant="ghost" size="icon" className="control-btn" disabled={!currentTrack} onClick={onPrevTrack} title="Previous Track">
             <SkipBack size={16} />
           </Button>
-          <Button 
-            id="play-pause" 
-            variant="default" 
-            size="icon" 
-            className={`control-btn play-btn ${isPlaying ? 'playing' : ''}`}
-            disabled={!currentTrack}
-            onClick={onTogglePlayPause}
-          >
+          <Button id="play-pause" variant="default" size="icon" className={`control-btn play-btn ${isPlaying ? 'playing' : ''}`} disabled={!currentTrack} onClick={onTogglePlayPause} title={isPlaying ? "Pause" : "Play"}>
             {isPlaying ? <Pause size={16} /> : <Play size={16} />}
           </Button>
-          <Button 
-            id="next-track" 
-            variant="ghost" 
-            size="icon" 
-            className="control-btn" 
-            disabled={!currentTrack}
-            onClick={onNextTrack}
-          >
+          <Button id="next-track" variant="ghost" size="icon" className="control-btn" disabled={!currentTrack} onClick={onNextTrack} title="Next Track">
             <SkipForward size={16} />
           </Button>
         </div>
@@ -164,14 +185,9 @@ const PlayerBar = ({
         </div>
       </div>
       
+      {/* Volume Controls remain the same */}
       <div className="volume-controls">
-        <Button 
-          id="volume-btn" 
-          variant="ghost" 
-          size="icon" 
-          className="volume-btn"
-          onClick={handleToggleMute}
-        >
+        <Button id="volume-btn" variant="ghost" size="icon" className="volume-btn" onClick={handleToggleMute} title={isMuted ? "Unmute" : "Mute"}>
           {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
         </Button>
         <div className="volume-slider-container">

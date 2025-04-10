@@ -5,7 +5,7 @@ const Sidebar = ({ navItems, activeSection, onNavItemClick }) => {
   return (
     <div className="sidebar">
       <div className="logo">
-        <h2 style={{ textTransform: 'lowercase' }}>YarnBall</h2>
+        <h2 style={{ textTransform: 'lowercase' }} className="font-bold italic">YarnBall</h2>
       </div>
       <nav className="nav-menu">
         <ul>

@@ -529,31 +529,64 @@ class SlskSearch {
     
     // Adjust scores based on additional factors
     candidates.forEach(candidate => {
-      // Bonus points for having close to the right number of files
-      // (allows for bonus tracks, different versions, etc.)
+      // --- Base Score (Folder Name Match) --- already applied before this loop
+
+      // --- File Count Accuracy Bonus ---
       const fileCountDiff = Math.abs(candidate.files.length - trackCount);
       if (fileCountDiff <= 2) {
         candidate.score += 15; // Perfect or nearly perfect match
+        logger.debug(`Candidate ${candidate.user}/${candidate.folderName}: +15 points (file count diff ${fileCountDiff})`);
       } else if (fileCountDiff <= 5) {
         candidate.score += 8; // Reasonably close
+        logger.debug(`Candidate ${candidate.user}/${candidate.folderName}: +8 points (file count diff ${fileCountDiff})`);
       }
-      
-      // Bonus for consistent file types (likely a proper album rip)
+
+      // --- File Type Scoring (Prioritizing Preferred Format) ---
+      const preferredFormatLower = preferredFormat?.toLowerCase(); // Handle potential undefined/null
       if (candidate.fileTypes.size === 1) {
-        candidate.score += 10;
-        
-        // Extra bonus for preferred format
-        if (preferredFormat !== 'any' && 
-            candidate.fileTypes.has(preferredFormat.toLowerCase())) {
-          candidate.score += 5;
+        const fileType = [...candidate.fileTypes][0];
+        if (preferredFormatLower && preferredFormatLower !== 'any' && fileType === preferredFormatLower) {
+          candidate.score += 20; // High bonus for matching preferred format
+          logger.debug(`Candidate ${candidate.user}/${candidate.folderName}: +20 points (matches preferred format: ${preferredFormat})`);
+        } else if (preferredFormatLower === 'any' || !preferredFormatLower) {
+           // If preference is 'any' or not set, give bonus for lossless
+           if (fileType === 'flac') {
+             candidate.score += 8;
+             logger.debug(`Candidate ${candidate.user}/${candidate.folderName}: +8 points (FLAC format, preference 'any')`);
+           } else if (fileType === 'wav') {
+             candidate.score += 5;
+             logger.debug(`Candidate ${candidate.user}/${candidate.folderName}: +5 points (WAV format, preference 'any')`);
+           } else {
+             candidate.score += 2; // Small bonus for consistency
+             logger.debug(`Candidate ${candidate.user}/${candidate.folderName}: +2 points (consistent type: ${fileType}, preference 'any')`);
+           }
+        } else {
+           // Consistent type, but doesn't match non-'any' preference
+           candidate.score += 2;
+           logger.debug(`Candidate ${candidate.user}/${candidate.folderName}: +2 points (consistent type: ${fileType}, but doesn't match preference ${preferredFormat})`);
         }
-        
-        // Bonus for lossless formats
-        if (candidate.fileTypes.has('flac')) {
-          candidate.score += 8;
-        } else if (candidate.fileTypes.has('wav')) {
-          candidate.score += 5;
-        }
+      } else if (candidate.fileTypes.size > 1) {
+        candidate.score -= 5; // Penalty for inconsistent file types
+        logger.debug(`Candidate ${candidate.user}/${candidate.folderName}: -5 points (inconsistent file types: ${[...candidate.fileTypes].join(', ')})`);
+      }
+
+      // --- Speed and Slot Scoring ---
+      const totalSpeed = candidate.files.reduce((sum, file) => sum + (file.speed || 0), 0);
+      const avgSpeed = candidate.files.length > 0 ? totalSpeed / candidate.files.length : 0;
+      const hasSlots = candidate.files.some(file => file.slots);
+
+      // Bonus for average speed (up to 10 points)
+      // Scale: 1 point per 1000 kbps, max 10 points
+      const speedBonus = Math.min(10, Math.floor(avgSpeed / 1000));
+      if (speedBonus > 0) {
+        candidate.score += speedBonus;
+        logger.debug(`Candidate ${candidate.user}/${candidate.folderName}: +${speedBonus} points (avg speed ${avgSpeed.toFixed(0)} kbps)`);
+      }
+
+      // Bonus for slot availability (5 points)
+      if (hasSlots) {
+        candidate.score += 5;
+        logger.debug(`Candidate ${candidate.user}/${candidate.folderName}: +5 points (slots available)`);
       }
       
       // Clean up candidate.tracks and map files to the tracks array
@@ -570,8 +603,11 @@ class SlskSearch {
         return aName.localeCompare(bName);
       });
       
-      // Final adjustment based on actual number of audio tracks
-      if (candidate.tracks.length < (trackCount / 2)) {
+      // --- Final adjustment based on actual number of *audio* tracks ---
+      // Ensure we only count valid audio files for disqualification
+      const audioTrackCount = candidate.tracks.length; // .tracks is already filtered for audio
+      if (audioTrackCount < (trackCount / 2)) {
+        logger.debug(`Candidate ${candidate.user}/${candidate.folderName}: Disqualified (only ${audioTrackCount} audio tracks found, need at least ${Math.ceil(trackCount / 2)})`);
         candidate.score = 0; // Disqualify if too few audio files
       }
     });

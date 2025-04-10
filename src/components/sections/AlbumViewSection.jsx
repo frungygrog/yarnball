@@ -34,12 +34,14 @@ const AlbumViewSection = ({
     try {
       const tracksData = await window.api.getAlbumTracks(album.artist, album.name);
       const formattedTracks = tracksData.map((track, index) => {
-        // For each track, check if it's already in the library
-        const isDownloaded = libraryData.songs.some(s => 
-          s.name.toLowerCase() === track.name.toLowerCase() && 
+        // For each track, check if it's already in the library and get its path
+        const librarySong = libraryData.songs.find(s =>
+          s.name.toLowerCase() === track.name.toLowerCase() &&
           s.artist.toLowerCase() === album.artist.toLowerCase()
         );
-        
+        const isDownloaded = !!librarySong;
+        const path = librarySong ? librarySong.path : null; // Get the path if downloaded
+
         return {
           id: track.mbid || generateId(),
           name: track.name,
@@ -48,7 +50,8 @@ const AlbumViewSection = ({
           number: index + 1,
           duration: track.duration,
           image: album.image,
-          isDownloaded // Add downloaded flag
+          isDownloaded, // Add downloaded flag
+          path // Add the path property
         };
       });
       

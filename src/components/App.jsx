@@ -538,30 +538,67 @@ const App = () => {
   };
 
   // Toggle favorite song
-  const toggleFavoriteSong = (song) => {
-    setFavoritesData(prev => {
-      const index = prev.songs.findIndex(s => s.id === song.id);
-      
-      if (index === -1) {
-        // Add to favorites
+  const toggleFavoriteSong = async (song) => { // Make async to handle potential API call
+    // Find the current index in favorites
+    const currentIndex = favoritesData.songs.findIndex(s => s.id === song.id);
+
+    if (currentIndex === -1) {
+      // --- Add to favorites ---
+      let songToAdd = { ...song }; // Start with the provided song data
+
+      // Check if album info is missing or incomplete
+      if (!songToAdd.album || songToAdd.album === 'Unknown Album') {
+        console.log(`Album info missing for "${song.name}", attempting to fetch...`);
+        try {
+          // Fetch full track info from Last.fm via main process
+          const trackInfo = await window.api.getTrackInfo({
+            artist: song.artist,
+            track: song.name
+          });
+          
+          // Update songToAdd with fetched album info if available
+          if (trackInfo?.album?.title) {
+            songToAdd.album = trackInfo.album.title;
+            // Optionally update image if available and missing
+            if (!songToAdd.image && trackInfo.album.image && trackInfo.album.image.length > 0) {
+               songToAdd.image = trackInfo.album.image[2]['#text']; // Assuming index 2 is medium size
+            }
+            console.log(`Fetched album info: "${songToAdd.album}"`);
+          } else {
+             console.warn(`Could not fetch album info for "${song.name}"`);
+             // Keep 'Unknown Album' or whatever was originally there
+             songToAdd.album = songToAdd.album || 'Unknown Album';
+          }
+        } catch (error) {
+          console.error('Error fetching track info for favorites:', error);
+          // Keep 'Unknown Album' on error
+          songToAdd.album = songToAdd.album || 'Unknown Album';
+        }
+      }
+
+      // Update state and localStorage with potentially enriched song data
+      setFavoritesData(prev => {
         const newFavorites = {
           ...prev,
-          songs: [...prev.songs, song]
+          songs: [...prev.songs, songToAdd] // Add the potentially enriched song
         };
-        // Save to localStorage
         localStorage.setItem('yarnball_favorites', JSON.stringify(newFavorites));
+        showNotification(`Added "${songToAdd.name}" to favorites`, 'success');
         return newFavorites;
-      } else {
-        // Remove from favorites
+      });
+
+    } else {
+      // --- Remove from favorites ---
+      setFavoritesData(prev => {
         const newFavorites = {
           ...prev,
           songs: prev.songs.filter(s => s.id !== song.id)
         };
-        // Save to localStorage
         localStorage.setItem('yarnball_favorites', JSON.stringify(newFavorites));
+        showNotification(`Removed "${song.name}" from favorites`, 'info');
         return newFavorites;
-      }
-    });
+      });
+    }
   };
 
   // Toggle play/pause
@@ -802,7 +839,11 @@ const App = () => {
           <FavoritesSection
             favoritesData={favoritesData}
             toggleFavoriteArtist={toggleFavoriteArtist}
+            toggleFavoriteSong={toggleFavoriteSong}
             loadArtistView={loadArtistView}
+            playSong={playSong}
+            libraryData={libraryData}
+            loadAlbumView={loadAlbumView}
             activeSection={activeSection}
           />
         )}
@@ -864,6 +905,8 @@ const App = () => {
         onTogglePlayPause={togglePlayPause}
         onPrevTrack={playPreviousTrack}
         onNextTrack={playNextTrack}
+        loadAlbumView={loadAlbumView}
+        loadArtistView={loadArtistView}
         audio={audio}
       />
       

@@ -51,21 +51,24 @@ const SearchSection = ({
       // Get tracks
       const tracks = await window.api.searchLastFm(searchQuery);
       const formattedTracks = tracks.map(track => {
-        // Check if the track is already in the library
-        const isDownloaded = libraryData.songs.some(s => 
-          s.name.toLowerCase() === track.name.toLowerCase() && 
+        // Check if the track is already in the library and get its path
+        const librarySong = libraryData.songs.find(s =>
+          s.name.toLowerCase() === track.name.toLowerCase() &&
           s.artist.toLowerCase() === track.artist.toLowerCase()
         );
-        
+        const isDownloaded = !!librarySong;
+        const path = librarySong ? librarySong.path : null; // Get the path if downloaded
+
         return {
           id: track.mbid || generateId(),
           name: track.name,
           artist: track.artist,
           listeners: track.listeners,
-          album: null,
-          duration: null,
+          album: null, // Search results don't reliably provide album info for tracks
+          duration: null, // Search results don't reliably provide duration
           image: track.image && track.image.length > 0 ? track.image[2]['#text'] : null,
-          isDownloaded // Add downloaded flag
+          isDownloaded, // Add downloaded flag
+          path // Add the path property
         };
       });
       
@@ -260,7 +263,7 @@ const SearchSection = ({
              filteredResults.artists.length === 0 && (
               <div className="empty-state">
                 <Search size={48} />
-                <p>No results found</p>
+                <p>no results found.</p>
               </div>
             )}
           </div>
