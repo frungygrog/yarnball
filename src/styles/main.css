@@ -7,7 +7,7 @@
     --background: 224 71% 4%;
     --foreground: 213 31% 91%;
     
-    --primary: 142 72% 29%;
+    --primary: 217 91% 60%; /* Changed from green to blue */
     --primary-foreground: 0 0% 100%;
     
     --muted: 223 47% 11%;
@@ -46,7 +46,7 @@
 /* Sidebar */
 .sidebar {
   grid-area: sidebar;
-  @apply bg-muted text-muted-foreground py-5 h-full overflow-y-auto;
+  @apply bg-gray-950 text-muted-foreground py-5 h-full overflow-y-auto;
 }
 
 .logo {
@@ -270,11 +270,15 @@
 
 /* Downloads Panel */
 .downloads-panel {
-  @apply fixed bottom-[90px] right-0 w-[400px] bg-accent text-foreground shadow-lg rounded-tl-lg z-10 transition-transform;
+  @apply fixed bottom-[90px] right-4 w-[400px] bg-accent text-foreground shadow-lg rounded-tl-lg rounded-tr-lg z-10 transition-transform;
 }
 
 .downloads-panel.minimized {
   @apply transform translate-y-[calc(100%-40px)];
+}
+
+.downloads-panel.minimized .downloads-list {
+  @apply hidden; /* Hide the list when minimized */
 }
 
 .panel-header {
@@ -328,7 +332,7 @@
 /* Player Bar */
 .player-bar {
   grid-area: player-bar;
-  @apply bg-muted py-0 px-4 flex items-center justify-between;
+  @apply bg-muted py-0 px-4 flex items-center justify-between z-20;
 }
 
 .now-playing {
@@ -391,6 +395,11 @@
   @apply h-full bg-muted-foreground rounded w-0;
 }
 
+/* Override default track background for player progress bar */
+.player-bar .progress-bar [data-radix-slider-track] {
+  @apply bg-accent;
+}
+
 .progress-bar:hover .progress {
   @apply bg-primary;
 }
@@ -418,6 +427,18 @@
 .volume-slider:hover .volume-progress {
   @apply bg-primary;
 }
+
+/* Adjust play icon centering */
+.player-bar .play-btn svg {
+  transform: translateX(1px);
+}
+
+/* Fill player control icons */
+.player-bar .control-btn svg,
+.player-bar .volume-btn svg {
+  fill: currentColor;
+}
+
 
 /* Empty States */
 .empty-state {

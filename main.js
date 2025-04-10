@@ -5,9 +5,9 @@ const slsk = require('slsk-client');
 const { shell } = require('electron');
 
 // Import custom utilities
-const LastFmAPI = require('./utils/lastfm');
-const SlskSearch = require('./utils/slsk-search');
-const logger = require('./utils/logger');
+const LastFmAPI = require('./src/api/lastfm');
+const SlskSearch = require('./src/api/soulseek');
+const logger = require('./src/lib/logger');
 
 function sanitizeFileName(name) {
   return name.replace(/[^a-zA-Z0-9\s.-]/g, '').replace(/\s+/g, ' ').trim();

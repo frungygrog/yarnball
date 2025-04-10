@@ -11,7 +11,7 @@ const FavoritesSection = ({
 }) => {
   return (
     <div id="favorites-section" className={`content-section ${activeSection === 'favorites' ? 'active' : ''}`}>
-      <h2 style={{ textTransform: 'lowercase' }}>Your Favorites</h2>
+      <h2>your favorites</h2>
       
       <div className="favorites-container">
         <div id="favorite-artists-grid" className="artists-grid">
@@ -28,7 +28,7 @@ const FavoritesSection = ({
           ) : (
             <div className="empty-state">
               <Heart size={48} />
-              <p style={{ textTransform: 'lowercase' }}>Artists you've hearted will appear here</p>
+              <p>artists you've hearted will appear here.</p>
             </div>
           )}
         </div>

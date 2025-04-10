@@ -107,15 +107,15 @@ const SettingsSection = ({
 
   return (
     <div id="settings-section" className={`content-section ${activeSection === 'settings' ? 'active' : ''}`}>
-      <h2 style={{ textTransform: 'lowercase' }}>Settings</h2>
+      <h2 className="text-2xl font-bold mb-6">settings</h2>
       
       <div className="settings-container">
         {/* Soulseek Connection */}
-        <div className="settings-group">
-          <h3 style={{ textTransform: 'lowercase' }}>Soulseek Connection</h3>
+        <div className="settings-group mb-8">
+          <h3 className="font-bold">soulseek connection</h3>
           
-          <div className="form-group">
-            <Label htmlFor="username" style={{ textTransform: 'lowercase' }}>Username:</Label>
+          <div className="form-group mt-4 mb-4">
+            <Label htmlFor="username">username:</Label>
             <Input
               type="text"
               id="username"
@@ -124,8 +124,8 @@ const SettingsSection = ({
             />
           </div>
           
-          <div className="form-group">
-            <Label htmlFor="password" style={{ textTransform: 'lowercase' }}>Password:</Label>
+          <div className="form-group mb-4">
+            <Label htmlFor="password">password:</Label>
             <Input
               type="password"
               id="password"
@@ -159,10 +159,10 @@ const SettingsSection = ({
         </div>
         
         {/* Last.fm API Key */}
-        <div className="settings-group">
-          <h3 style={{ textTransform: 'lowercase' }}>Last.fm API Key</h3>
+        <div className="settings-group mb-8">
+          <h3 className="font-bold">last.fm API key</h3>
           
-          <div className="form-group">
+          <div className="form-group mt-4 mb-4">
             <Input
               type="text"
               id="lastfm-key"
@@ -187,11 +187,11 @@ const SettingsSection = ({
         </div>
         
         {/* Download Settings */}
-        <div className="settings-group">
-          <h3 style={{ textTransform: 'lowercase' }}>Download Settings</h3>
+        <div className="settings-group mb-8">
+          <h3 className="font-bold">download settings</h3>
           
-          <div className="form-group">
-            <Label htmlFor="download-path" style={{ textTransform: 'lowercase' }}>Download Path:</Label>
+          <div className="form-group mt-4 mb-4">
+            <Label htmlFor="download-path">download path:</Label>
             <div className="flex">
               <Input
                 type="text"
@@ -209,7 +209,7 @@ const SettingsSection = ({
             </div>
           </div>
           
-          <div className="form-group">
+          <div className="form-group mb-4">
             <div className="flex items-center space-x-2">
               <Checkbox 
                 id="organize-files" 
@@ -217,40 +217,40 @@ const SettingsSection = ({
                 onCheckedChange={handleOrganizeFilesChange} 
               />
               <Label htmlFor="organize-files">
-                Organize files by Artist/Album
+                organize files by artist/album:
               </Label>
             </div>
           </div>
           
-          <div className="form-group">
-            <Label htmlFor="preferred-format" style={{ textTransform: 'lowercase' }}>Preferred Format:</Label>
+          <div className="form-group mb-4">
+            <Label htmlFor="preferred-format">preferred format:</Label>
             <Select 
               id="preferred-format" 
               value={localPreferredFormat} 
               onValueChange={handlePreferredFormatChange}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Select format" />
+                <SelectValue placeholder="select format" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="any">Any (Best Available)</SelectItem>
-                <SelectItem value="flac">FLAC</SelectItem>
-                <SelectItem value="mp3">MP3</SelectItem>
-                <SelectItem value="wav">WAV</SelectItem>
+                <SelectItem value="any">any format</SelectItem>
+                <SelectItem value="flac">.flac</SelectItem>
+                <SelectItem value="mp3">.mp3</SelectItem>
+                <SelectItem value="wav">.wav</SelectItem>
               </SelectContent>
             </Select>
           </div>
         </div>
         
         {/* Debug Logs */}
-        <div className="settings-group">
-          <h3 style={{ textTransform: 'lowercase' }}>Debug Logs</h3>
-          <Button 
+        <div className="settings-group mb-8">
+          <h3 className="font-bold">debug logs</h3>
+          <Button className="mt-4"
             id="open-logs-btn"
             onClick={() => setShowLogsModal(true)}
           >
             <File size={16} className="mr-2" />
-            View Logs
+            view logs
           </Button>
         </div>
       </div>

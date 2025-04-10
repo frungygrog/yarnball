@@ -135,7 +135,7 @@ const SearchSection = ({
           <Input
             type="text"
             id="global-search"
-            placeholder="Search for songs, albums, or artists..."
+            placeholder="search for songs, albums, or artists..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyPress={handleKeyPress}

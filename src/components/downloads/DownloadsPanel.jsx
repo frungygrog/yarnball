@@ -5,7 +5,7 @@ import { Progress } from '@/components/ui/progress';
 import { cn } from '../../lib/utils';
 
 const DownloadsPanel = ({ downloads }) => {
-  const [minimized, setMinimized] = useState(false);
+  const [minimized, setMinimized] = useState(true);
 
   const toggleMinimize = () => {
     setMinimized(!minimized);

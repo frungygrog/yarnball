@@ -1,5 +1,5 @@
 const path = require('path');
-const logger = require('./logger');
+const logger = require('../lib/logger');
 
 class SlskSearch {
   constructor(slskClient) {

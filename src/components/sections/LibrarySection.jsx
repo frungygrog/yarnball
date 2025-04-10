@@ -22,7 +22,7 @@ const LibrarySection = ({
 
   return (
     <div id="library-section" className={`content-section ${activeSection === 'library' ? 'active' : ''}`}>
-      <h2 style={{ textTransform: 'lowercase' }}>Your Library</h2>
+      <h2>your library</h2>
       
       {/* Using styled tab buttons */}
       <div className="library-tabs">
@@ -30,19 +30,19 @@ const LibrarySection = ({
           className={`py-2 px-4 rounded-full text-sm ${activeTab === 'saved-songs' ? 'bg-primary text-white' : 'bg-accent text-muted-foreground'}`}
           onClick={() => setActiveTab('saved-songs')}
         >
-          Saved Songs ({libraryData.songs?.length || 0})
+          saved songs ({libraryData.songs?.length || 0})
         </button>
         <button 
           className={`py-2 px-4 rounded-full text-sm ${activeTab === 'downloaded-albums' ? 'bg-primary text-white' : 'bg-accent text-muted-foreground'}`}
           onClick={() => setActiveTab('downloaded-albums')}
         >
-          Albums ({libraryData.albums?.length || 0})
+          albums ({libraryData.albums?.length || 0})
         </button>
         <button 
           className={`py-2 px-4 rounded-full text-sm ${activeTab === 'artists' ? 'bg-primary text-white' : 'bg-accent text-muted-foreground'}`}
           onClick={() => setActiveTab('artists')}
         >
-          Artists ({libraryData.artists?.length || 0})
+          artists ({libraryData.artists?.length || 0})
         </button>
       </div>
       
@@ -70,7 +70,7 @@ const LibrarySection = ({
           ) : (
             <div className="empty-state">
               <Music size={48} />
-              <p style={{ textTransform: 'lowercase' }}>Your saved songs will appear here</p>
+              <p>your saved songs will appear here.</p>
             </div>
           )}
         </div>
@@ -89,7 +89,7 @@ const LibrarySection = ({
           ) : (
             <div className="empty-state">
               <Disc size={48} />
-              <p style={{ textTransform: 'lowercase' }}>Your albums will appear here</p>
+              <p>your albums will appear here.</p>
             </div>
           )}
         </div>
@@ -108,7 +108,7 @@ const LibrarySection = ({
           ) : (
             <div className="empty-state">
               <User size={48} />
-              <p style={{ textTransform: 'lowercase' }}>Your favorite artists will appear here</p>
+              <p>your favorite artists will appear here.</p>
             </div>
           )}
         </div>

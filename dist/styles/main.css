@@ -503,7 +503,7 @@ video {
     --background: 224 71% 4%;
     --foreground: 213 31% 91%;
     
-    --primary: 142 72% 29%;
+    --primary: 217 91% 60%; /* Changed from green to blue */
     --primary-foreground: 0 0% 100%;
     
     --muted: 223 47% 11%;
@@ -578,6 +578,15 @@ video {
 }
 .mb-1 {
   margin-bottom: 0.25rem;
+}
+.mb-4 {
+  margin-bottom: 1rem;
+}
+.mb-6 {
+  margin-bottom: 1.5rem;
+}
+.mb-8 {
+  margin-bottom: 2rem;
 }
 .ml-2 {
   margin-left: 0.5rem;
@@ -848,6 +857,10 @@ video {
 .text-center {
   text-align: center;
 }
+.text-2xl {
+  font-size: 1.5rem;
+  line-height: 2rem;
+}
 .text-lg {
   font-size: 1.125rem;
   line-height: 1.75rem;
@@ -855,6 +868,9 @@ video {
 .text-sm {
   font-size: 0.875rem;
   line-height: 1.25rem;
+}
+.font-bold {
+  font-weight: 700;
 }
 .font-medium {
   font-weight: 500;
@@ -992,7 +1008,8 @@ video {
   grid-area: sidebar;
   height: 100%;
   overflow-y: auto;
-  background-color: hsl(var(--muted));
+  --tw-bg-opacity: 1;
+  background-color: rgb(3 7 18 / var(--tw-bg-opacity, 1));
   padding-top: 1.25rem;
   padding-bottom: 1.25rem;
   color: hsl(var(--muted-foreground));
@@ -1379,10 +1396,11 @@ video {
 .downloads-panel {
   position: fixed;
   bottom: 90px;
-  right: 0px;
+  right: 1rem;
   z-index: 10;
   width: 400px;
   border-top-left-radius: var(--radius);
+  border-top-right-radius: var(--radius);
   background-color: hsl(var(--accent));
   color: hsl(var(--foreground));
   --tw-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
@@ -1396,6 +1414,10 @@ video {
 .downloads-panel.minimized {
   --tw-translate-y: calc(100% - 40px);
   transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
+}
+
+.downloads-panel.minimized .downloads-list {
+  display: none; /* Hide the list when minimized */
 }
 
 .panel-header {
@@ -1483,6 +1505,7 @@ video {
 /* Player Bar */
 .player-bar {
   grid-area: player-bar;
+  z-index: 20;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1610,6 +1633,11 @@ video {
   background-color: hsl(var(--muted-foreground));
 }
 
+/* Override default track background for player progress bar */
+.player-bar .progress-bar [data-radix-slider-track] {
+  background-color: hsl(var(--accent));
+}
+
 .progress-bar:hover .progress {
   background-color: hsl(var(--primary));
 }
@@ -1650,6 +1678,18 @@ video {
 .volume-slider:hover .volume-progress {
   background-color: hsl(var(--primary));
 }
+
+/* Adjust play icon centering */
+.player-bar .play-btn svg {
+  transform: translateX(1px);
+}
+
+/* Fill player control icons */
+.player-bar .control-btn svg,
+.player-bar .volume-btn svg {
+  fill: currentColor;
+}
+
 
 /* Empty States */
 .empty-state {

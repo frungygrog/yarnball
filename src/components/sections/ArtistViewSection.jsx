@@ -49,7 +49,7 @@ const ArtistViewSection = ({
       setTopTracks(formattedTracks);
       setIsLoading(prev => ({ ...prev, tracks: false }));
     } catch (err) {
-      console.error('Error loading artist top tracks:', err);
+      console.error('error loading artist top tracks:', err);
       setError(prev => ({ ...prev, tracks: err.message }));
       setIsLoading(prev => ({ ...prev, tracks: false }));
     }
@@ -68,7 +68,7 @@ const ArtistViewSection = ({
       setAlbums(formattedAlbums);
       setIsLoading(prev => ({ ...prev, albums: false }));
     } catch (err) {
-      console.error('Error loading artist albums:', err);
+      console.error('error loading artist albums:', err);
       setError(prev => ({ ...prev, albums: err.message }));
       setIsLoading(prev => ({ ...prev, albums: false }));
     }
@@ -98,7 +98,7 @@ const ArtistViewSection = ({
         </div>
         
         <div className="artist-info">
-          <h1 id="artist-name" style={{ textTransform: 'lowercase' }}>{artist.name}</h1>
+          <h1 id="artist-name">{artist.name}</h1>
           <Button 
             id="favorite-artist" 
             variant="ghost"
@@ -114,13 +114,13 @@ const ArtistViewSection = ({
       <div className="artist-content">
         {/* Top Songs */}
         <div className="artist-top-songs">
-          <h3 style={{ textTransform: 'lowercase' }}>Top Songs</h3>
+          <h3>top songs</h3>
           
           <div id="artist-songs-list" className="song-list">
             {isLoading.tracks ? (
               <div className="loading">
                 <Loader className="animate-spin" size={24} />
-                <span className="ml-2">Loading songs...</span>
+                <span className="ml-2">loading songs...</span>
               </div>
             ) : error.tracks ? (
               <div className="empty-state">
@@ -138,7 +138,7 @@ const ArtistViewSection = ({
               ))
             ) : (
               <div className="empty-state">
-                <p>No songs found for this artist</p>
+                <p>no songs found for this artist.</p>
               </div>
             )}
           </div>
@@ -146,17 +146,17 @@ const ArtistViewSection = ({
 
         {/* Albums */}
         <div className="artist-albums">
-          <h3 style={{ textTransform: 'lowercase' }}>Albums</h3>
+          <h3 style={{ textTransform: 'lowercase' }}>albums</h3>
           
           <div id="artist-albums-grid" className="albums-grid">
             {isLoading.albums ? (
               <div className="loading">
                 <Loader className="animate-spin" size={24} />
-                <span className="ml-2">Loading albums...</span>
+                <span className="ml-2">loading albums...</span>
               </div>
             ) : error.albums ? (
               <div className="empty-state">
-                <p>Error loading albums: {error.albums}</p>
+                <p style={{ textTransform: 'lowercase' }}>error loading albums: {error.albums}</p>
               </div>
             ) : albums.length > 0 ? (
               albums.map(album => (
@@ -168,7 +168,7 @@ const ArtistViewSection = ({
               ))
             ) : (
               <div className="empty-state">
-                <p>No albums found for this artist</p>
+                <p>no albums found for this artist.</p>
               </div>
             )}
           </div>

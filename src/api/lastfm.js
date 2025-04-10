@@ -1,5 +1,5 @@
 const fetch = require('node-fetch');
-const logger = require('./logger');
+const logger = require('../lib/logger');
 
 class LastFmAPI {
   constructor(apiKey) {

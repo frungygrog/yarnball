@@ -107,8 +107,8 @@ const AlbumViewSection = ({
           </div>
           
           <div className="album-details">
-            <h1 id="album-title" style={{ textTransform: 'lowercase' }}>{album.name}</h1>
-            <h3 id="album-artist" style={{ textTransform: 'lowercase' }}>{album.artist}</h3>
+            <h1 id="album-title">{album.name}</h1>
+            <h3 id="album-artist">{album.artist}</h3>
             <Button 
               id="download-album" 
               className="download-album-btn"
@@ -125,8 +125,8 @@ const AlbumViewSection = ({
         <div className="album-tracks">
           <div className="song-list-headers">
             <div className="song-number">#</div>
-            <div className="song-info" style={{ textTransform: 'lowercase' }}>Title</div>
-            <div className="song-duration" style={{ textTransform: 'lowercase' }}>Duration</div>
+            <div className="song-info">title</div>
+            <div className="song-duration">duration</div>
             <div className="song-actions"></div>
           </div>
           
@@ -134,11 +134,11 @@ const AlbumViewSection = ({
             {isLoading ? (
               <div className="loading">
                 <Loader className="animate-spin" size={24} />
-                <span className="ml-2">Loading tracks...</span>
+                <span className="ml-2">loading tracks...</span>
               </div>
             ) : error ? (
               <div className="empty-state">
-                <p>Error loading tracks: {error}</p>
+                <p style={{ textTransform: 'lowercase' }}>error loading tracks: {error}</p>
               </div>
             ) : tracks.length > 0 ? (
               tracks.map(track => (
@@ -152,7 +152,7 @@ const AlbumViewSection = ({
               ))
             ) : (
               <div className="empty-state">
-                <p>No tracks found for this album</p>
+                <p>no tracks found for this album.</p>
               </div>
             )}
           </div>
