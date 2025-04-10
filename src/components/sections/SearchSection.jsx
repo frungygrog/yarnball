@@ -18,7 +18,8 @@ const SearchSection = ({
   lastfmInitialized,
   switchSection,
   showNotification,
-  activeSection
+  activeSection,
+  libraryData // Add this prop to check if songs are already downloaded
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
@@ -49,15 +50,24 @@ const SearchSection = ({
       
       // Get tracks
       const tracks = await window.api.searchLastFm(searchQuery);
-      const formattedTracks = tracks.map(track => ({
-        id: track.mbid || generateId(),
-        name: track.name,
-        artist: track.artist,
-        listeners: track.listeners,
-        album: null,
-        duration: null,
-        image: track.image && track.image.length > 0 ? track.image[2]['#text'] : null
-      }));
+      const formattedTracks = tracks.map(track => {
+        // Check if the track is already in the library
+        const isDownloaded = libraryData.songs.some(s => 
+          s.name.toLowerCase() === track.name.toLowerCase() && 
+          s.artist.toLowerCase() === track.artist.toLowerCase()
+        );
+        
+        return {
+          id: track.mbid || generateId(),
+          name: track.name,
+          artist: track.artist,
+          listeners: track.listeners,
+          album: null,
+          duration: null,
+          image: track.image && track.image.length > 0 ? track.image[2]['#text'] : null,
+          isDownloaded // Add downloaded flag
+        };
+      });
       
       // Only search for albums and artists if the query isn't too specific
       let formattedAlbums = [];
@@ -204,6 +214,7 @@ const SearchSection = ({
                       context="search"
                       onPlay={() => playSong(song, "search")}
                       onDownload={() => downloadSong(song)}
+                      isDownloaded={song.isDownloaded} // Pass the downloaded status
                     />
                   ))}
                 </div>

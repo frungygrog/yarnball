@@ -525,3 +525,96 @@ ipcMain.handle('download-song', async (event, { artist, title, album, downloadId
     throw error;
   }
 });
+
+// NEW CODE: Handler for downloading an entire album at once
+ipcMain.handle('download-album', async (event, { artist, albumName, tracks, downloadId, organize, preferredFormat }) => {
+  logger.info(`Album download request for "${albumName}" by "${artist}" (${tracks.length} tracks)`);
+
+  try {
+    if (!slskClient || !slskSearch) {
+      logger.error('Not connected to Soulseek');
+      throw new Error('Not connected to Soulseek');
+    }
+
+    // Create the yarnball directory in Music if it doesn't exist
+    const homeDir = app.getPath('home');
+    const yarnballDir = path.join(homeDir, 'Music', 'yarnball');
+    try {
+      fs.mkdirSync(yarnballDir, { recursive: true });
+      logger.debug(`Created or verified download directory: ${yarnballDir}`);
+    } catch (err) {
+      if (err.code !== 'EEXIST') {
+        logger.error(`Failed to create directory: ${err.message}`);
+        throw err;
+      }
+    }
+
+    // Create artist/album directories
+    let downloadPath = yarnballDir;
+
+    // Sanitize artist and album names for directory names
+    const sanitizedArtist = sanitizeFileName(artist);
+    const sanitizedAlbum = sanitizeFileName(albumName);
+
+    // Create artist directory
+    const artistDir = path.join(yarnballDir, sanitizedArtist);
+    fs.mkdirSync(artistDir, { recursive: true });
+
+    // Create album directory
+    const albumDir = path.join(artistDir, sanitizedAlbum);
+    fs.mkdirSync(albumDir, { recursive: true });
+
+    downloadPath = albumDir;
+
+    // Track download progress
+    const progressCallback = (progress, status) => {
+      if (mainWindow && !mainWindow.isDestroyed() && downloadId) {
+        mainWindow.webContents.send('album-download-progress', {
+          downloadId,
+          progress,
+          status
+        });
+      }
+    };
+
+    // Send initial progress update
+    progressCallback(0, 'Searching for album...');
+
+    // Find and download the album
+    const result = await slskSearch.findAndDownloadAlbum(
+      artist,
+      albumName,
+      tracks,
+      downloadPath,
+      progressCallback,
+      preferredFormat
+    );
+
+    // Loop through the downloaded tracks and add them to the library
+    const downloadedTracks = [];
+    
+    for (const track of result.tracks) {
+      // Add song to library through the event system
+      const songInfo = {
+        id: Math.random().toString(36).substring(2, 15),
+        name: track.title,
+        artist: artist,
+        album: albumName,
+        path: track.path,
+        format: path.extname(track.path).substring(1)
+      };
+      
+      mainWindow.webContents.send('add-song-to-library', songInfo);
+      downloadedTracks.push(songInfo);
+    }
+
+    return {
+      success: true,
+      message: `Downloaded album "${albumName}" by "${artist}" with ${result.tracks.length} tracks`,
+      tracks: downloadedTracks
+    };
+  } catch (error) {
+    logger.error(`Download album error: ${error.message}`);
+    throw error;
+  }
+});

@@ -10,18 +10,22 @@ const AlbumViewSection = ({
   previousSection,
   playSong,
   downloadSong,
+  downloadAlbum,
   slskConnected,
-  activeSection
+  activeSection,
+  libraryData // Add this prop to check if songs are already downloaded
 }) => {
   const [tracks, setTracks] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [downloadCount, setDownloadCount] = useState(0); // Track how many songs are already downloaded
 
   useEffect(() => {
     if (album) {
       loadAlbumTracks();
     }
-  }, [album]);
+  }, [album, libraryData]); // Added libraryData to dependencies to refresh when library changes
 
   const loadAlbumTracks = async () => {
     setIsLoading(true);
@@ -29,15 +33,28 @@ const AlbumViewSection = ({
     
     try {
       const tracksData = await window.api.getAlbumTracks(album.artist, album.name);
-      const formattedTracks = tracksData.map((track, index) => ({
-        id: track.mbid || generateId(),
-        name: track.name,
-        artist: album.artist,
-        album: album.name,
-        number: index + 1,
-        duration: track.duration,
-        image: album.image
-      }));
+      const formattedTracks = tracksData.map((track, index) => {
+        // For each track, check if it's already in the library
+        const isDownloaded = libraryData.songs.some(s => 
+          s.name.toLowerCase() === track.name.toLowerCase() && 
+          s.artist.toLowerCase() === album.artist.toLowerCase()
+        );
+        
+        return {
+          id: track.mbid || generateId(),
+          name: track.name,
+          artist: album.artist,
+          album: album.name,
+          number: index + 1,
+          duration: track.duration,
+          image: album.image,
+          isDownloaded // Add downloaded flag
+        };
+      });
+      
+      // Count downloaded tracks
+      const downloadedCount = formattedTracks.filter(track => track.isDownloaded).length;
+      setDownloadCount(downloadedCount);
       
       setTracks(formattedTracks);
     } catch (err) {
@@ -60,10 +77,28 @@ const AlbumViewSection = ({
       return;
     }
     
-    // Download each track
-    tracks.forEach(track => {
-      downloadSong(track);
-    });
+    // Filter out already downloaded tracks
+    const tracksToDownload = tracks.filter(track => !track.isDownloaded);
+    
+    if (tracksToDownload.length === 0) {
+      alert('All tracks from this album are already downloaded');
+      return;
+    }
+    
+    // Set downloading state
+    setIsDownloading(true);
+    
+    try {
+      // Download the entire album at once instead of track-by-track
+      await downloadAlbum(album, tracksToDownload);
+      
+      // Show success message (handled by downloadAlbum function)
+    } catch (error) {
+      console.error('Failed to download album:', error);
+      alert(`Failed to download album: ${error.message}`);
+    } finally {
+      setIsDownloading(false);
+    }
   };
 
   // Helper function to generate ID
@@ -74,6 +109,9 @@ const AlbumViewSection = ({
   if (!album) {
     return null;
   }
+
+  // Calculate how many tracks are left to download
+  const tracksRemaining = tracks.length - downloadCount;
 
   return (
     <div id="album-view-section" className={`content-section ${activeSection === 'album-view' ? 'active' : ''}`}>
@@ -109,14 +147,43 @@ const AlbumViewSection = ({
           <div className="album-details">
             <h1 id="album-title">{album.name}</h1>
             <h3 id="album-artist">{album.artist}</h3>
+            
+            {/* Show download status in the button */}
             <Button 
               id="download-album" 
               className="download-album-btn"
               onClick={handleDownloadAlbum}
+              disabled={isDownloading || tracksRemaining === 0}
             >
-              <Download size={16} className="mr-2" />
-              Download Album
+              {isDownloading ? (
+                <>
+                  <Loader size={16} className="mr-2 animate-spin" />
+                  Downloading Album...
+                </>
+              ) : tracksRemaining === 0 ? (
+                <>
+                  <Download size={16} className="mr-2" />
+                  Album Downloaded
+                </>
+              ) : downloadCount > 0 ? (
+                <>
+                  <Download size={16} className="mr-2" />
+                  Download {tracksRemaining} Remaining Tracks
+                </>
+              ) : (
+                <>
+                  <Download size={16} className="mr-2" />
+                  Download Album
+                </>
+              )}
             </Button>
+            
+            {/* Show download stats */}
+            {downloadCount > 0 && (
+              <p className="text-sm text-muted-foreground mt-2">
+                {downloadCount} of {tracks.length} tracks downloaded
+              </p>
+            )}
           </div>
         </div>
       </div>
@@ -148,6 +215,7 @@ const AlbumViewSection = ({
                   context="album"
                   onPlay={() => playSong(track, "album")}
                   onDownload={() => downloadSong(track)}
+                  isDownloaded={track.isDownloaded} // Pass the downloaded status
                 />
               ))
             ) : (

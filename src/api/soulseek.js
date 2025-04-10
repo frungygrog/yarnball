@@ -204,6 +204,37 @@ class SlskSearch {
         logger.info(`Download complete for ${fileInfo.file}`);
         resolve(data);
       });
+
+      // Monitor download progress
+      if (progressCallback) {
+        const progressInterval = setInterval(() => {
+          if (!download || !download.status) {
+            clearInterval(progressInterval);
+            return;
+          }
+
+          if (download.status.state === 'Transferring') {
+            downloadStarted = true;
+            const progress = Math.floor((download.status.transferred / download.status.size) * 100);
+            lastProgress = progress;
+            progressCallback(progress, 'Downloading...');
+          } else if (download.status.state === 'Connecting') {
+            progressCallback(0, 'Connecting...');
+          } else if (download.status.state === 'Negotiating') {
+            progressCallback(0, 'Negotiating connection...');
+          } else if (download.status.state === 'Initializing') {
+            progressCallback(0, 'Initializing...');
+          } else if (download.status.state === 'Queued') {
+            progressCallback(0, `Queued (${download.status.position} in line)`);
+          } else if (download.status.state === 'Aborted') {
+            clearInterval(progressInterval);
+            reject(new Error('Download aborted'));
+          } else if (download.status.state === 'Completed') {
+            clearInterval(progressInterval);
+            progressCallback(100, 'Completed');
+          }
+        }, 500);
+      }
     });
   }
 
@@ -301,6 +332,276 @@ class SlskSearch {
       logger.error(`Error in findAndDownloadSong: ${error.message}`);
       throw error;
     }
+  }
+
+  // New method for downloading an entire album
+  async findAndDownloadAlbum(artistName, albumTitle, tracks, downloadDir, progressCallback = null, preferredFormat = 'any') {
+    logger.info(`Finding and downloading album "${albumTitle}" by "${artistName}" with ${tracks.length} tracks`);
+    
+    try {
+      // Send initial progress update
+      if (progressCallback) {
+        progressCallback(0, 'Searching for album...');
+      }
+      
+      // First search for the complete album
+      const albumQuery = `${artistName} ${albumTitle}`;
+      logger.debug(`Searching for album: "${albumQuery}"`);
+      let results = await this.searchSoulseek(albumQuery, 15000); // Longer timeout for album search
+      
+      if (results.length === 0) {
+        logger.warn(`No results found for album query. Trying alternative search.`);
+        // Try alternate query with just the album name
+        const simpleQuery = albumTitle.replace(/[\(\)\[\]]/g, ''); // Remove parentheses that might confuse search
+        results = await this.searchSoulseek(simpleQuery, 15000);
+      }
+      
+      if (results.length === 0) {
+        throw new Error('No album matches found');
+      }
+      
+      // Identify potential complete albums by grouping files by user and folder
+      const albumCandidates = this.findAlbumCandidates(results, artistName, albumTitle, tracks, preferredFormat);
+      
+      if (albumCandidates.length === 0) {
+        throw new Error('No complete album matches found');
+      }
+      
+      logger.info(`Found ${albumCandidates.length} potential sources for complete album`);
+      
+      // Update progress
+      if (progressCallback) {
+        progressCallback(10, 'Found potential album matches, preparing download...');
+      }
+      
+      // Attempt to download the album from the best candidate
+      const downloadedTracks = [];
+      let downloadSuccess = false;
+      
+      // Try the top 3 candidates
+      for (let i = 0; i < Math.min(3, albumCandidates.length); i++) {
+        const candidate = albumCandidates[i];
+        
+        try {
+          if (progressCallback) {
+            progressCallback(15, `Downloading album from ${candidate.user}...`);
+          }
+          
+          logger.info(`Attempting album download from user "${candidate.user}" (score: ${candidate.score})`);
+          
+          // Download each track in the album
+          const totalTracks = candidate.tracks.length;
+          let successfulDownloads = 0;
+          
+          for (let j = 0; j < totalTracks; j++) {
+            const track = candidate.tracks[j];
+            const trackFile = track.file;
+            
+            // Clean up filename
+            const fileName = path.basename(trackFile.replace(/\\/g, path.sep))
+              .replace(/[<>:"/\\|?*]/g, '-');
+            
+            const filePath = path.join(downloadDir, fileName);
+            
+            try {
+              // Update progress for each track
+              if (progressCallback) {
+                const overallProgress = 15 + Math.floor((85 * j) / totalTracks);
+                progressCallback(overallProgress, `Downloading track ${j+1}/${totalTracks}...`);
+              }
+              
+              const data = await this.downloadFile(track, filePath);
+              
+              // Add to our successful downloads
+              downloadedTracks.push({
+                title: this.extractTrackTitle(fileName, tracks[j]?.name),
+                path: filePath,
+                track: j + 1
+              });
+              
+              successfulDownloads++;
+              
+            } catch (trackError) {
+              logger.warn(`Failed to download track "${fileName}": ${trackError.message}`);
+            }
+          }
+          
+          // If we got at least 80% of the tracks, consider it a success
+          if (successfulDownloads >= 0.8 * totalTracks) {
+            downloadSuccess = true;
+            
+            // Final progress update
+            if (progressCallback) {
+              progressCallback(100, `Downloaded ${successfulDownloads}/${totalTracks} tracks`);
+            }
+            
+            logger.info(`Successfully downloaded ${successfulDownloads}/${totalTracks} tracks from album "${albumTitle}"`);
+            break;
+          } else {
+            logger.warn(`Only downloaded ${successfulDownloads}/${totalTracks} tracks from user "${candidate.user}", trying next source...`);
+          }
+          
+        } catch (candidateError) {
+          logger.warn(`Download failed from user "${candidate.user}": ${candidateError.message}`);
+        }
+        
+        // If we failed with this candidate, wait before trying the next one
+        if (!downloadSuccess && i < albumCandidates.length - 1) {
+          logger.info(`Waiting 3 seconds before trying next album source...`);
+          await new Promise(resolve => setTimeout(resolve, 3000));
+        }
+      }
+      
+      if (!downloadSuccess) {
+        throw new Error('Failed to download album from any source');
+      }
+      
+      return {
+        success: true,
+        tracks: downloadedTracks
+      };
+    } catch (error) {
+      logger.error(`Error in findAndDownloadAlbum: ${error.message}`);
+      throw error;
+    }
+  }
+
+  // Helper function to find album candidates
+  findAlbumCandidates(results, artistName, albumTitle, tracks, preferredFormat) {
+    logger.debug(`Analyzing ${results.length} results for album "${albumTitle}" by "${artistName}"`);
+    
+    // Normalize inputs for case-insensitive comparison
+    const normalizedArtist = artistName.toLowerCase();
+    const normalizedAlbum = albumTitle.toLowerCase();
+    const trackCount = tracks.length;
+    
+    // Group results by user and folder
+    const folderGroups = {};
+    
+    results.forEach(result => {
+      // Convert Windows paths to proper format
+      const normalizedPath = result.file.replace(/\\/g, '/');
+      const parts = normalizedPath.split('/');
+      const fileName = parts[parts.length - 1].toLowerCase();
+      
+      // Extract folder name - try to get parent folder
+      let folderName = '';
+      if (parts.length > 1) {
+        folderName = parts[parts.length - 2].toLowerCase();
+      }
+      
+      // Create a key for the folder grouping
+      const folderKey = `${result.user}_${folderName}`;
+      
+      if (!folderGroups[folderKey]) {
+        folderGroups[folderKey] = {
+          user: result.user,
+          folderName: folderName,
+          score: 0,
+          files: [],
+          fileTypes: new Set()
+        };
+        
+        // Score the folder name
+        if (folderName.includes(normalizedArtist)) {
+          folderGroups[folderKey].score += 10;
+        }
+
+        if (folderName.includes(normalizedAlbum)) {
+          folderGroups[folderKey].score += 15;
+        }
+      }
+      
+      // Add file to the folder
+      folderGroups[folderKey].files.push(result);
+      
+      // Track file extensions
+      const fileExt = path.extname(fileName).toLowerCase().substring(1);
+      folderGroups[folderKey].fileTypes.add(fileExt);
+    });
+    
+    // Convert to array for filtering and sorting
+    let candidates = Object.values(folderGroups);
+    
+    // Keep only folders with a reasonable number of files
+    // (at least half the number of tracks we're looking for)
+    candidates = candidates.filter(c => c.files.length >= (trackCount / 2));
+    
+    // Adjust scores based on additional factors
+    candidates.forEach(candidate => {
+      // Bonus points for having close to the right number of files
+      // (allows for bonus tracks, different versions, etc.)
+      const fileCountDiff = Math.abs(candidate.files.length - trackCount);
+      if (fileCountDiff <= 2) {
+        candidate.score += 15; // Perfect or nearly perfect match
+      } else if (fileCountDiff <= 5) {
+        candidate.score += 8; // Reasonably close
+      }
+      
+      // Bonus for consistent file types (likely a proper album rip)
+      if (candidate.fileTypes.size === 1) {
+        candidate.score += 10;
+        
+        // Extra bonus for preferred format
+        if (preferredFormat !== 'any' && 
+            candidate.fileTypes.has(preferredFormat.toLowerCase())) {
+          candidate.score += 5;
+        }
+        
+        // Bonus for lossless formats
+        if (candidate.fileTypes.has('flac')) {
+          candidate.score += 8;
+        } else if (candidate.fileTypes.has('wav')) {
+          candidate.score += 5;
+        }
+      }
+      
+      // Clean up candidate.tracks and map files to the tracks array
+      candidate.tracks = candidate.files.filter(file => {
+        const ext = path.extname(file.file).toLowerCase();
+        // Only include audio files
+        return ['.mp3', '.flac', '.wav', '.m4a', '.ogg', '.aac'].includes(ext);
+      }).map(file => file);
+      
+      // Sort tracks by filename (which often includes track number)
+      candidate.tracks.sort((a, b) => {
+        const aName = path.basename(a.file).toLowerCase();
+        const bName = path.basename(b.file).toLowerCase();
+        return aName.localeCompare(bName);
+      });
+      
+      // Final adjustment based on actual number of audio tracks
+      if (candidate.tracks.length < (trackCount / 2)) {
+        candidate.score = 0; // Disqualify if too few audio files
+      }
+    });
+    
+    // Filter out disqualified candidates
+    candidates = candidates.filter(c => c.score > 0);
+    
+    // Sort by score descending
+    candidates.sort((a, b) => b.score - a.score);
+    
+    return candidates;
+  }
+
+  // Helper to extract track title from filename
+  extractTrackTitle(fileName, defaultTitle) {
+    // Remove file extension
+    const nameWithoutExt = fileName.replace(/\.[^/.]+$/, "");
+    
+    // Try to remove track number patterns
+    let cleanedName = nameWithoutExt
+      .replace(/^\d+\s*[-–—.)\]]\s*/, '') // Remove leading numbers with separators
+      .replace(/^\d+\s+/, '');             // Remove just leading numbers with space
+    
+    // If the result seems too short, use the original name without extension
+    if (cleanedName.length < 3 && nameWithoutExt.length > cleanedName.length) {
+      cleanedName = nameWithoutExt;
+    }
+    
+    // Return either the extracted name or the default title
+    return cleanedName || defaultTitle || fileName;
   }
 }
 

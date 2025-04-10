@@ -1,8 +1,18 @@
+// First, let's modify the SongItem.jsx component to show a download indicator
+
 import React from 'react';
-import { Play, Download, Trash2 } from 'lucide-react';
+import { Play, Download, Trash2, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
-const SongItem = ({ song, includeAlbum = false, context = 'search', onPlay, onDownload, onDelete }) => {
+const SongItem = ({ 
+  song, 
+  includeAlbum = false, 
+  context = 'search', 
+  onPlay, 
+  onDownload, 
+  onDelete,
+  isDownloaded = false // New prop to indicate if the song is already downloaded
+}) => {
   // Format time function inside component
   const formatTime = (seconds) => {
     if (!seconds) return '--:--';
@@ -26,26 +36,31 @@ const SongItem = ({ song, includeAlbum = false, context = 'search', onPlay, onDo
       {/* Number column that shows play button on hover */}
       <div className="song-number relative">
         <span className="group-hover:invisible">{songNumber}</span>
-        {context === 'library' && (
-          <div className="absolute inset-0 flex items-center justify-center invisible group-hover:visible">
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="song-play-btn h-6 w-6 p-0" 
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                if (onPlay) onPlay();
-              }}
-            >
-              <Play size={16} />
-            </Button>
-          </div>
-        )}
+        <div className="absolute inset-0 flex items-center justify-center invisible group-hover:visible">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="song-play-btn h-6 w-6 p-0" 
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              if (onPlay) onPlay();
+            }}
+          >
+            <Play size={16} />
+          </Button>
+        </div>
       </div>
       
       <div className="song-info">
-        <div className="song-title">{songName}</div>
+        <div className="song-title flex items-center">
+          {songName}
+          {isDownloaded && (
+            <span className="ml-2 text-green-500" title="Downloaded">
+              <Check size={14} />
+            </span>
+          )}
+        </div>
         <div className="song-artist">{songArtist}</div>
       </div>
       
@@ -76,13 +91,19 @@ const SongItem = ({ song, includeAlbum = false, context = 'search', onPlay, onDo
             variant="ghost" 
             size="icon" 
             className="song-download-btn" 
+            disabled={isDownloaded}
+            title={isDownloaded ? "Already downloaded" : "Download"}
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
-              if (onDownload) onDownload();
+              if (onDownload && !isDownloaded) onDownload();
             }}
           >
-            <Download size={16} />
+            {isDownloaded ? (
+              <Check size={16} className="text-green-500" />
+            ) : (
+              <Download size={16} />
+            )}
           </Button>
         )}
         

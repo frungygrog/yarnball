@@ -20,11 +20,14 @@ contextBridge.exposeInMainWorld('api', {
   getArtistAlbums: (artist) => ipcRenderer.invoke('get-artist-albums', artist),
   downloadSong: (songInfo) => ipcRenderer.invoke('download-song', songInfo),
   
+  // NEW: Album download function
+  downloadAlbum: (albumInfo) => ipcRenderer.invoke('download-album', albumInfo),
+  
   // File system functions
   getDownloadPath: () => ipcRenderer.invoke('get-download-path'),
   selectDownloadPath: () => ipcRenderer.invoke('select-download-path'),
   playLocalFile: (filePath) => ipcRenderer.invoke('play-local-file', filePath),
-  deleteFile: (filePath) => ipcRenderer.invoke('delete-file', filePath), // Add the delete function
+  deleteFile: (filePath) => ipcRenderer.invoke('delete-file', filePath),
 
   // Logs
   getLogs: () => ipcRenderer.invoke('get-logs'),
@@ -34,6 +37,14 @@ contextBridge.exposeInMainWorld('api', {
     ipcRenderer.on('download-progress', (_event, data) => callback(data));
     return () => {
       ipcRenderer.removeAllListeners('download-progress');
+    };
+  },
+  
+  // NEW: Album download progress event
+  onAlbumDownloadProgress: (callback) => {
+    ipcRenderer.on('album-download-progress', (_event, data) => callback(data));
+    return () => {
+      ipcRenderer.removeAllListeners('album-download-progress');
     };
   },
   

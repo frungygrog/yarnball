@@ -55,17 +55,23 @@ const App = () => {
       updateDownloadProgress(data);
     };
 
+    const albumDownloadProgressHandler = (data) => {
+      updateDownloadProgress(data); // Reuse the same function for album downloads
+    };
+
     const addSongToLibraryHandler = (song) => {
       addSongToLibrary(song);
     };
 
     // Set up event listeners
     const unsubscribeDownloadProgress = window.api.onDownloadProgress(downloadProgressHandler);
+    const unsubscribeAlbumDownloadProgress = window.api.onAlbumDownloadProgress(albumDownloadProgressHandler);
     const unsubscribeAddSongToLibrary = window.api.addSongToLibrary(addSongToLibraryHandler);
 
     return () => {
       // Clean up event listeners
       unsubscribeDownloadProgress();
+      unsubscribeAlbumDownloadProgress();
       unsubscribeAddSongToLibrary();
       
       // Clean up audio
@@ -365,7 +371,7 @@ const App = () => {
     }
     
     try {
-      // NEW: Check if the song is already in the library
+      // Check if the song is already in the library
       const existingSong = libraryData.songs.find(s => 
         s.name.toLowerCase() === song.name.toLowerCase() && 
         s.artist.toLowerCase() === song.artist.toLowerCase()
@@ -464,6 +470,69 @@ const App = () => {
       );
       
       showNotification(`Download failed: ${error.message}`, 'error');
+      throw error;
+    }
+  };
+
+  // NEW: Download an entire album at once
+  const downloadAlbum = async (album, tracks) => {
+    if (!slskConnected) {
+      showNotification('Please connect to Soulseek first', 'error');
+      switchSection('settings');
+      return;
+    }
+    
+    try {
+      // Add to downloads with a special album type
+      const downloadId = generateId();
+      const download = {
+        id: downloadId,
+        albumId: album.id,
+        name: album.name,
+        artist: album.artist,
+        isAlbum: true,
+        trackCount: tracks.length,
+        progress: 0,
+        status: 'Searching...',
+        image: album.image,
+        startTime: Date.now()
+      };
+      
+      setDownloads(prev => [...prev, download]);
+      
+      // Start download
+      const result = await window.api.downloadAlbum({
+        artist: album.artist,
+        albumName: album.name,
+        tracks: tracks,
+        downloadId: downloadId,
+        organize: true, // Always organize albums
+        preferredFormat: preferredFormat
+      });
+      
+      // Update download status
+      setDownloads(prev => 
+        prev.map(d => d.id === downloadId 
+          ? { ...d, status: 'Completed', progress: 100 } 
+          : d
+        )
+      );
+      
+      showNotification(`Downloaded album: ${album.name} by ${album.artist}`, 'success');
+      
+      return result;
+    } catch (error) {
+      console.error('Error downloading album:', error);
+      
+      // Update download status
+      setDownloads(prev => 
+        prev.map(d => d.albumId === album.id
+          ? { ...d, status: 'Failed', error: error.message }
+          : d
+        )
+      );
+      
+      showNotification(`Album download failed: ${error.message}`, 'error');
       throw error;
     }
   };
@@ -712,6 +781,7 @@ const App = () => {
             switchSection={switchSection}
             showNotification={showNotification}
             activeSection={activeSection}
+            libraryData={libraryData}
           />
         )}
         
@@ -723,7 +793,7 @@ const App = () => {
             playSong={playSong}
             downloadSong={downloadSong}
             activeSection={activeSection}
-            setLibraryData={setLibraryData} // Add this prop
+            setLibraryData={setLibraryData}
             showNotification={showNotification} 
           />
         )}
@@ -773,8 +843,10 @@ const App = () => {
             previousSection={previousSection}
             playSong={playSong}
             downloadSong={downloadSong}
+            downloadAlbum={downloadAlbum} // New prop for album downloads
             slskConnected={slskConnected}
             activeSection={activeSection}
+            libraryData={libraryData}
           />
         )}
         
