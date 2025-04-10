@@ -270,6 +270,8 @@ const App = () => {
       } else if (context === 'library') {
         songs = libraryData.songs;
         console.log("Using library songs for queue:", songs);
+      } else if (context === 'favorites') {
+        songs = favoritesData.songs;
       }
       
       // Set the queue and context
@@ -354,7 +356,8 @@ const App = () => {
         newDownloads[index] = {
           ...newDownloads[index],
           progress: data.progress,
-          status: data.status || newDownloads[index].status
+          status: data.status || newDownloads[index].status,
+          speed: data.speed || 0 // Add speed to download information
         };
       }
       
@@ -392,6 +395,7 @@ const App = () => {
         album: song.album,
         progress: 0,
         status: 'Searching...',
+        speed: 0, // Initialize with 0 speed
         image: song.image,
         startTime: Date.now()
       };
@@ -431,7 +435,7 @@ const App = () => {
         // Update download status
         setDownloads(prev => 
           prev.map(d => d.id === downloadId 
-            ? { ...d, status: 'Already Exists', progress: 100, path: result.path } 
+            ? { ...d, status: 'Already Exists', progress: 100, path: result.path, speed: 0 } 
             : d
           )
         );
@@ -441,7 +445,7 @@ const App = () => {
         // Update download status for a new download
         setDownloads(prev => 
           prev.map(d => d.id === downloadId 
-            ? { ...d, status: 'Completed', progress: 100, path: result.path } 
+            ? { ...d, status: 'Completed', progress: 100, path: result.path, speed: 0 } 
             : d
           )
         );
@@ -464,7 +468,7 @@ const App = () => {
       // Update download status
       setDownloads(prev => 
         prev.map(d => d.songId === song.id
-          ? { ...d, status: 'Failed', error: error.message }
+          ? { ...d, status: 'Failed', error: error.message, speed: 0 }
           : d
         )
       );
@@ -494,6 +498,7 @@ const App = () => {
         trackCount: tracks.length,
         progress: 0,
         status: 'Searching...',
+        speed: 0, // Initialize with 0 speed
         image: album.image,
         startTime: Date.now()
       };
@@ -513,7 +518,7 @@ const App = () => {
       // Update download status
       setDownloads(prev => 
         prev.map(d => d.id === downloadId 
-          ? { ...d, status: 'Completed', progress: 100 } 
+          ? { ...d, status: 'Completed', progress: 100, speed: 0 } 
           : d
         )
       );
@@ -527,7 +532,7 @@ const App = () => {
       // Update download status
       setDownloads(prev => 
         prev.map(d => d.albumId === album.id
-          ? { ...d, status: 'Failed', error: error.message }
+          ? { ...d, status: 'Failed', error: error.message, speed: 0 }
           : d
         )
       );
