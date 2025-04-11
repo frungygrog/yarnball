@@ -34,7 +34,12 @@ function createWindow() {
     }
   });
 
-  mainWindow.loadFile('index.html');
+  // Vite/Electron: Load dev server in development, file in production
+  const isDev = !app.isPackaged;
+  const startUrl = isDev
+    ? 'http://localhost:5173'
+    : `file://${path.join(__dirname, 'dist/index.html')}`;
+  mainWindow.loadURL(startUrl);
   
   // Open DevTools during development
   // mainWindow.webContents.openDevTools();
