@@ -242,33 +242,26 @@ class SlskSearch {
     logger.info(`Finding and downloading "${songTitle}" by "${artistName}" from album "${albumTitle}"`);
     
     try {
-      // Send initial progress update
       if (progressCallback) {
         progressCallback(0, 'Searching...');
       }
-      
-      // First search for artist, album, and song
-      const artistAlbumSongQuery = `${artistName} ${albumTitle} ${songTitle}`;
-      logger.debug(`Searching for artist, album, and song: "${artistAlbumSongQuery}"`);
-      let results = await this.searchSoulseek(artistAlbumSongQuery);
-      
+
+      var cleanedQuery;
+      var songQuery = `${artistName} ${albumTitle}`;
+
+      cleanedQuery = songQuery.replace(/[^a-zA-Z0-9\s]/g, '').toLowerCase();
+      logger.debug(`Searching for artist, album. ${songQuery}"`);
+      let results = await this.searchSoulseek(cleanedQuery);
       
       if (results.length === 0) {
-        logger.warn(`No results found for artist, album, and song. Attempting fallback to album name search.`);
-        const albumQuery = albumTitle;
-        logger.debug(`Searching Soulseek for album: "${albumQuery}"`);
-        results = await this.searchSoulseek(albumQuery);
+        logger.warn(`No results found for album "${albumTitle}". Attempting fallback to album name without capitalization or punctuation.`);
+        cleanedQuery = albumTitle.replace(/[^a-zA-Z0-9\s]/g, '').toLowerCase();
+        logger.debug(`Searching Soulseek for cleaned album: "${cleanedQuery}"`);
+        results = await this.searchSoulseek(cleanedQuery);
 
         if (results.length === 0) {
-          logger.warn(`No results found for album "${albumTitle}". Attempting fallback to album name without capitalization or punctuation.`);
-          const albumQueryCleaned = albumTitle.replace(/[^a-zA-Z0-9\s]/g, '').toLowerCase();
-          logger.debug(`Searching Soulseek for cleaned album: "${albumQueryCleaned}"`);
-          results = await this.searchSoulseek(albumQueryCleaned);
-
-          if (results.length === 0) {
-            logger.warn(`No results found for any search attempts`);
-            throw new Error('No results found');
-          }
+          logger.warn(`No results found for any search attempts`);
+          throw new Error('No results found');
         }
       }
       
@@ -593,7 +586,7 @@ class SlskSearch {
       candidate.tracks = candidate.files.filter(file => {
         const ext = path.extname(file.file).toLowerCase();
         // Only include audio files
-        return ['.mp3', '.flac', '.wav', '.m4a', '.ogg', '.aac'].includes(ext);
+        return ['.mp3', '.flac', '.wav'].includes(ext);
       }).map(file => file);
       
       // Sort tracks by filename (which often includes track number)

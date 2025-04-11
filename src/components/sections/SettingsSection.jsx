@@ -6,6 +6,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 
 const SettingsSection = ({
   connectToSoulseek,
@@ -111,7 +112,14 @@ const SettingsSection = ({
     <div id="settings-section" className={`content-section ${activeSection === 'settings' ? 'active' : ''}`}>
       <h2 className="text-2xl font-bold mb-6">settings</h2>
       
-      <div className="settings-container">
+      <Tabs defaultValue="api" className="settings-container">
+        <TabsList className="mb-4">
+          <TabsTrigger value="api">api</TabsTrigger>
+          <TabsTrigger value="download">download</TabsTrigger>
+          <TabsTrigger value="debug">debug</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="api">
         {/* Soulseek Connection */}
         <div className="settings-group mb-8">
           <h3 className="font-bold">soulseek connection</h3>
@@ -174,7 +182,6 @@ const SettingsSection = ({
             </Alert>
           )}
         </div>
-        
         {/* Last.fm API Key */}
         <div className="settings-group mb-8">
           <h3 className="font-bold">last.fm API key</h3>
@@ -218,7 +225,9 @@ const SettingsSection = ({
             )}
           </div>
         </div>
-        
+        </TabsContent>
+
+        <TabsContent value="download">
         {/* Download Settings */}
         <div className="settings-group mb-8">
           <h3 className="font-bold">download settings</h3>
@@ -276,7 +285,9 @@ const SettingsSection = ({
             </div>
           </div>
         </div>
-        
+        </TabsContent>
+
+        <TabsContent value="debug">
         {/* Debug Logs */}
         <div className="settings-group mb-8">
           <h3 className="font-bold">debug logs</h3>
@@ -288,7 +299,8 @@ const SettingsSection = ({
             view logs
           </Button>
         </div>
-      </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
