@@ -29,6 +29,10 @@ contextBridge.exposeInMainWorld('api', {
   playLocalFile: (filePath) => ipcRenderer.invoke('play-local-file', filePath),
   deleteFile: (filePath) => ipcRenderer.invoke('delete-file', filePath),
 
+  // Download control
+  cancelDownload: (downloadId) => ipcRenderer.invoke('cancel-download', downloadId),
+  saveAlbumArt: ({ url, destPath }) => ipcRenderer.invoke('save-album-art', { url, destPath }),
+
   // Logs
   getLogs: () => ipcRenderer.invoke('get-logs'),
   
@@ -54,5 +58,8 @@ contextBridge.exposeInMainWorld('api', {
     return () => {
       ipcRenderer.removeAllListeners('add-song-to-library');
     };
-  }
+  },
+
+  // Check for local album art in a folder (returns absolute path or null)
+  getLocalAlbumArt: (albumDir) => ipcRenderer.invoke('get-local-album-art', albumDir)
 });

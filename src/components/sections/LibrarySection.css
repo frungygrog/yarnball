@@ -1,0 +1,12 @@
+/* Library Section */
+.library-tabs {
+  @apply flex gap-2 mb-5 border-b border-border pb-2;
+}
+
+.library-content {
+  @apply hidden;
+}
+
+.library-content.active {
+  @apply block;
+}

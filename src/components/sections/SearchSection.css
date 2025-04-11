@@ -1,0 +1,29 @@
+/* Search Section */
+.search-container {
+  @apply mb-5;
+}
+
+.search-input-container {
+  @apply flex mb-4;
+}
+
+#global-search {
+  @apply flex-1 py-3 px-4 rounded-[30px] shadow-md text-base;
+}
+
+.search-filters {
+  @apply flex gap-2;
+}
+
+button.search-filter { /* Increased specificity */
+  @apply py-2 px-4 bg-accent text-sm text-muted-foreground;
+  border-radius: 9999px; /* Apply pill shape */
+}
+
+.search-filter.active {
+  @apply bg-primary text-white;
+}
+
+.search-results-container {
+  @apply bg-background p-5;
+}

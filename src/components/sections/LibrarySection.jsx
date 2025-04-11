@@ -5,6 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import SongItem from '../common/SongItem';
 import AlbumCard from '../common/AlbumCard';
 import ArtistCard from '../common/ArtistCard';
+import './LibrarySection.css'; // Import the component-specific CSS
 
 const LibrarySection = ({
   libraryData,

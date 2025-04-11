@@ -14,6 +14,7 @@ import DownloadsPanel from './downloads/DownloadsPanel';
 import LogsModal from './modals/LogsModal';
 import Notification from './common/Notification';
 import { generateId } from '../lib/utils';
+import './common/common.css'; // Import common styles
 
 const App = () => {
   // State variables
@@ -445,10 +446,28 @@ const App = () => {
             : d
           )
         );
-        
         showNotification(`Downloaded: ${song.name} by ${song.artist}`, 'success');
+        // Remove from downloads after short delay
+        setTimeout(() => {
+          setDownloads(prev => prev.filter(d => d.id !== downloadId));
+        }, 500);
       }
       
+      // Save Last.fm album art to album folder if available
+      if (song.image && result.path) {
+        try {
+          // Determine album folder
+          const albumDir = result.path ? result.path.substring(0, result.path.lastIndexOf('/')) : '';
+          // Use .png or .jpg based on image URL
+          let ext = '.png';
+          if (song.image.match(/\.jpe?g($|\?)/i)) ext = '.jpg';
+          const destPath = albumDir + '/album' + ext;
+          await window.api.saveAlbumArt({ url: song.image, destPath });
+        } catch (err) {
+          console.error('Error saving album art:', err);
+        }
+      }
+
       // Add to library
       addSongToLibrary({
         ...song,
@@ -647,7 +666,8 @@ const App = () => {
   };
 
   // Load library data from localStorage
-  const loadLibraryData = () => {
+  // Enhanced: Load library data from localStorage and patch missing album art
+  const loadLibraryData = async () => {
     console.log("Loading library data...");
     const savedData = localStorage.getItem('yarnball_library');
     
@@ -657,11 +677,41 @@ const App = () => {
         console.log("Library data loaded:", parsedData);
         
         // Make sure we have valid arrays
-        const sanitizedData = {
+        let sanitizedData = {
           songs: Array.isArray(parsedData.songs) ? parsedData.songs : [],
           albums: Array.isArray(parsedData.albums) ? parsedData.albums : [],
           artists: Array.isArray(parsedData.artists) ? parsedData.artists : []
         };
+
+        // Patch missing album art for songs
+        for (let song of sanitizedData.songs) {
+          if (!song.image || song.image === '' || song.image === null) {
+            // Try to find album art in the album folder
+            if (song.path) {
+              const albumDir = song.path.substring(0, song.path.lastIndexOf('/'));
+              // eslint-disable-next-line no-await-in-loop
+              const localArt = await window.api.getLocalAlbumArt(albumDir);
+              if (localArt) song.image = localArt;
+            }
+          }
+        }
+        // Patch missing album art for albums
+        for (let album of sanitizedData.albums) {
+          if (!album.image || album.image === '' || album.image === null) {
+            // Try to find album art in the album folder
+            // Find a song for this album to get the path
+            const song = sanitizedData.songs.find(
+              s => s.album && s.album.toLowerCase() === album.name.toLowerCase() &&
+                   s.artist && s.artist.toLowerCase() === album.artist.toLowerCase()
+            );
+            if (song && song.path) {
+              const albumDir = song.path.substring(0, song.path.lastIndexOf('/'));
+              // eslint-disable-next-line no-await-in-loop
+              const localArt = await window.api.getLocalAlbumArt(albumDir);
+              if (localArt) album.image = localArt;
+            }
+          }
+        }
         
         // Log the sanitized data
         console.log("Sanitized library data:", sanitizedData);
@@ -892,7 +942,69 @@ const App = () => {
         )}
         
         <DownloadsPanel 
-          downloads={downloads}
+          downloads={downloads.map(download => ({
+            ...download,
+            onCancel: async (d) => {
+              // Cancel download via backend
+              await window.api.cancelDownload(d.id);
+              setDownloads(prev =>
+                prev.map(dl =>
+                  dl.id === d.id
+                    ? { ...dl, status: 'Cancelled', progress: 0 }
+                    : dl
+                )
+              );
+              showNotification(`Download cancelled: ${d.name}`, 'info');
+              // Remove from downloads after short delay
+              setTimeout(() => {
+                setDownloads(prev => prev.filter(dl => dl.id !== d.id));
+              }, 500);
+            },
+            onRetry: async (d) => {
+              // Increment peer index and retry download from next-best peer
+              const nextPeerIndex = (d.peerIndex || 0) + 1;
+              setDownloads(prev =>
+                prev.map(dl =>
+                  dl.id === d.id
+                    ? { ...dl, status: 'Retrying...', progress: 0, peerIndex: nextPeerIndex }
+                    : dl
+                )
+              );
+              // Re-initiate download with peerIndex (backend must support this param)
+              try {
+                const result = await window.api.downloadSong({
+                  artist: d.artist,
+                  title: d.name,
+                  album: d.album,
+                  downloadId: d.id,
+                  organize: organizeFiles,
+                  preferredFormat: preferredFormat,
+                  peerIndex: nextPeerIndex
+                });
+                setDownloads(prev =>
+                  prev.map(dl =>
+                    dl.id === d.id
+                      ? { ...dl, status: 'Completed', progress: 100, path: result.path }
+                      : dl
+                  )
+                );
+                showNotification(`Downloaded from next peer: ${d.name}`, 'success');
+                // Remove from downloads after short delay
+                setTimeout(() => {
+                  setDownloads(prev => prev.filter(dl => dl.id !== d.id));
+                }, 500);
+              } catch (error) {
+                setDownloads(prev =>
+                  prev.map(dl =>
+                    dl.id === d.id
+                      ? { ...dl, status: 'Failed', error: error.message }
+                      : dl
+                  )
+                );
+                showNotification(`Retry failed: ${error.message}`, 'error');
+              }
+            }
+          }))}
         />
       </div>
       

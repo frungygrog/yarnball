@@ -1,236 +1,164 @@
 const path = require('path');
 const logger = require('../lib/logger');
 
-class SlskSearch {
+/**
+ * Soulseek Search & Scoring System
+ * - Prioritizes download speed and slot availability above all else.
+ * - Ensures metadata accuracy (artist, song, album, format).
+ * - Scores and sorts results globally for best possible download experience.
+ */
+class SoulseekSearch {
   constructor(slskClient) {
     this.slskClient = slskClient;
-    logger.info('SlskSearch utility initialized');
+    logger.info('SoulseekSearch initialized');
   }
 
-  async searchSoulseek(query, timeout = 10000) {
-    logger.debug(`Starting Soulseek search for: "${query}"`);
-    
+  /**
+   * Perform a Soulseek search.
+   * @param {string} query
+   * @param {number} timeout
+   * @returns {Promise<Array>}
+   */
+  async search(query, timeout = 10000) {
+    logger.debug(`Soulseek search: "${query}"`);
     return new Promise((resolve, reject) => {
-      this.slskClient.search({
-        req: query,
-        timeout: timeout
-      }, (err, results) => {
+      this.slskClient.search({ req: query, timeout }, (err, results) => {
         if (err) {
           logger.error(`Soulseek search error: ${err.message}`);
           reject(err);
-          return;
+        } else {
+          logger.debug(`Soulseek search found ${results.length} results`);
+          resolve(results);
         }
-        
-        logger.debug(`Soulseek search complete. Found ${results.length} results`);
-        resolve(results);
       });
     });
   }
 
-  scoreResults(results, artistName, songTitle, albumTitle, preferredFormat) {
-    logger.debug(`Scoring ${results.length} results for artist "${artistName}", song "${songTitle}", album "${albumTitle}"`);
-    
-    // Normalize inputs for case-insensitive comparison
-    const normalizedArtist = artistName.toLowerCase();
-    const normalizedSong = songTitle.toLowerCase();
-    const normalizedAlbum = albumTitle.toLowerCase();
-    
-    // Group results by folder
-    const folderGroups = {};
-    
-    results.forEach(result => {
-      // Convert Windows paths to proper format
+  /**
+   * Score and sort Soulseek results for a single song.
+   * @param {Array} results
+   * @param {string} artist
+   * @param {string} song
+   * @param {string} album
+   * @param {string} preferredFormat
+   * @returns {Array} Sorted and scored results
+   */
+  scoreResults(results, artist, song, album, preferredFormat = 'any') {
+    logger.debug(`Scoring ${results.length} results for "${artist}" - "${song}" [${album}]`);
+
+    const norm = s => (s || '').toLowerCase();
+    const nArtist = norm(artist);
+    const nSong = norm(song);
+    const nAlbum = norm(album);
+    const nFormat = preferredFormat && preferredFormat !== 'any' ? norm(preferredFormat) : null;
+
+    // Score each result individually
+    const scored = results.map(result => {
       const normalizedPath = result.file.replace(/\\/g, '/');
-      const parts = normalizedPath.split('/');
-      const fileName = parts[parts.length - 1].toLowerCase();
-      
-      // Extract folder name - try to get parent folder
-      let folderName = '';
-      if (parts.length > 1) {
-        folderName = parts[parts.length - 2].toLowerCase();
-      }
-      
-      // Create a key for the folder grouping
-      const folderKey = `${result.user}_${folderName}`;
-      
-      if (!folderGroups[folderKey]) {
-        folderGroups[folderKey] = {
-          user: result.user,
-          folderName: folderName,
-          files: [],
-          score: 0
-        };
-        
-        // Score the folder name
-        if (folderName.includes(normalizedArtist)) {
-          folderGroups[folderKey].score += 1;
-          logger.debug(`Folder "${folderName}" includes artist name "${normalizedArtist}": +1 points`);
-        }
+      const fileName = path.basename(normalizedPath).toLowerCase();
+      const folderName = normalizedPath.split('/').slice(-2, -1)[0]?.toLowerCase() || '';
 
-        if (folderName.includes(normalizedAlbum)) {
-          folderGroups[folderKey].score += 1;
-          logger.debug(`Folder "${folderName}" includes album name "${normalizedAlbum}": +1 points`);
-        }
+      let score = 0;
 
-        // Combined bonus for artist, album, and song
-        if (folderName.includes(normalizedArtist) && folderName.includes(normalizedAlbum) && fileName.includes(normalizedSong)) {
-          folderGroups[folderKey].score += 20;
-          logger.debug(`Folder "${folderName}" includes artist and album, and file "${fileName}" includes song title: +20 points`);
-        }
+      // --- 1. Download Speed & Slot Availability (Primary) ---
+      // Available slot: +100, else +0
+      if (result.slots) score += 100;
+      // Download speed: +1 per 1000 kbps, up to +50
+      if (result.speed) score += Math.min(50, Math.floor(result.speed / 1000));
+
+      // --- 2. Metadata Accuracy (Secondary) ---
+      // Artist/album in folder: +10 each
+      if (folderName.includes(nArtist)) score += 10;
+      if (folderName.includes(nAlbum)) score += 10;
+      // Song in file name: +20 if exact, +10 if partial
+      if (fileName === nSong) score += 20;
+      else if (fileName.includes(nSong)) score += 10;
+      // Album in file/folder: +5
+      if (fileName.includes(nAlbum)) score += 5;
+
+      // --- 3. Format & Quality (Tertiary) ---
+      const ext = path.extname(fileName).replace('.', '');
+      if (nFormat && ext === nFormat) score += 10;
+      if (!nFormat) {
+        if (ext === 'flac') score += 5;
+        else if (ext === 'wav') score += 3;
+        else if (ext === 'mp3' && result.bitrate >= 320) score += 2;
+        else if (ext === 'mp3' && result.bitrate >= 256) score += 1;
       }
-      
-      // Add file to the folder
-      folderGroups[folderKey].files.push({
+
+      // --- 4. Penalties ---
+      // No slots: -30
+      if (!result.slots) score -= 30;
+      // Very slow: -10 if speed < 100 kbps
+      if (result.speed && result.speed < 100) score -= 10;
+
+      return {
         ...result,
+        score,
         fileName,
-        normalizedPath
-      });
-      
-      // Score for the file name
-      if (fileName === normalizedSong) {
-        folderGroups[folderKey].score += 15;
-        logger.debug(`File "${fileName}" exactly matches song title "${normalizedSong}": +15 points`);
-      } else if (fileName.includes(normalizedSong)) {
-        folderGroups[folderKey].score += 5;
-        logger.debug(`File "${fileName}" includes song title "${normalizedSong}": +5 points`);
-      }
-      
-      // Bonus points for preferred format
-      if (preferredFormat && preferredFormat !== 'any') {
-        const fileExt = path.extname(fileName).toLowerCase().substring(1);
-        if (fileExt === preferredFormat.toLowerCase()) {
-          folderGroups[folderKey].score += 4;
-          logger.debug(`File "${fileName}" matches preferred format "${preferredFormat}": +4 points`);
-        }
-      }
-      
-      // Bonus points for better quality
-      const fileExt = path.extname(fileName).toLowerCase().substring(1);
-      if (fileExt === 'flac') {
-        folderGroups[folderKey].score += 3;
-        logger.debug(`File "${fileName}" is lossless format (FLAC): +3 points`);
-      } else if (fileExt === 'wav') {
-        folderGroups[folderKey].score += 2;
-        logger.debug(`File "${fileName}" is lossless format (WAV): +2 points`);
-      } else if (fileExt === 'mp3' && result.bitrate && result.bitrate >= 320) {
-        folderGroups[folderKey].score += 2;
-        logger.debug(`File "${fileName}" is high bitrate MP3 (${result.bitrate}kbps): +2 points`);
-      } else if (fileExt === 'mp3' && result.bitrate && result.bitrate >= 256) {
-        folderGroups[folderKey].score += 1;
-        logger.debug(`File "${fileName}" is good bitrate MP3 (${result.bitrate}kbps): +1 point`);
-      }
+        folderName,
+        ext,
+      };
     });
-    
-    // Convert to array and sort by score
-    const scoredResults = Object.values(folderGroups);
-    
-    // Additional processing for each folder group
-    scoredResults.forEach(group => {
-      // Bonus points for folders with multiple files (likely complete albums)
-      if (group.files.length > 5) {
-        group.score += 2;
-        logger.debug(`Folder from user "${group.user}" has ${group.files.length} files: +2 points`);
-      }
-      
-      // Sort files by preferred format first, then by slots availability and then by speed
-      group.files.sort((a, b) => {
-        // Preferred format takes priority
-        if (preferredFormat && preferredFormat !== 'any') {
-          const aExt = path.extname(a.fileName).toLowerCase().substring(1);
-          const bExt = path.extname(b.fileName).toLowerCase().substring(1);
-          
-          if (aExt === preferredFormat.toLowerCase() && bExt !== preferredFormat.toLowerCase()) {
-            return -1;
-          }
-          
-          if (aExt !== preferredFormat.toLowerCase() && bExt === preferredFormat.toLowerCase()) {
-            return 1;
-          }
-        }
-        
-        // Then sort by slots and speed
-        if (a.slots === b.slots) {
-          return b.speed - a.speed;
-        }
-        return a.slots ? -1 : 1;
-      });
-      
-      // Find the best match for the song title
-      const songMatches = group.files.filter(file => 
-        file.fileName.includes(normalizedSong)
-      );
-      
-      if (songMatches.length > 0) {
-        group.bestMatch = songMatches[0];
-        logger.debug(`Found best match in folder "${group.folderName}" for song "${songTitle}"`);
-      } else {
-        group.bestMatch = group.files[0];
-        logger.debug(`No exact match found, using first file in folder "${group.folderName}"`);
-      }
+
+    // Sort: score DESC, then speed DESC, then slots DESC
+    scored.sort((a, b) => {
+      if (b.score !== a.score) return b.score - a.score;
+      if ((b.speed || 0) !== (a.speed || 0)) return (b.speed || 0) - (a.speed || 0);
+      if ((b.slots ? 1 : 0) !== (a.slots ? 1 : 0)) return (b.slots ? 1 : 0) - (a.slots ? 1 : 0);
+      return 0;
     });
-    
-    // Sort by score (descending)
-    scoredResults.sort((a, b) => b.score - a.score);
-    
-    logger.debug(`Scoring complete. Top score: ${scoredResults.length > 0 ? scoredResults[0].score : 'N/A'}`);
-    
-    return scoredResults;
+
+    logger.debug(`Top result score: ${scored[0]?.score ?? 'N/A'}`);
+    return scored;
   }
 
+  /**
+   * Download a file from Soulseek.
+   * @param {Object} fileInfo
+   * @param {string} downloadPath
+   * @param {Function} progressCallback
+   * @returns {Promise}
+   */
   async downloadFile(fileInfo, downloadPath, progressCallback = null) {
-    logger.debug(`Starting download for file: ${fileInfo.file}`);
-    
+    logger.debug(`Downloading file: ${fileInfo.file}`);
     return new Promise((resolve, reject) => {
-      let downloadStarted = false;
       let lastProgress = 0;
-      
-      const download = this.slskClient.download({
-        file: fileInfo,
-        path: downloadPath
-      }, (err, data) => {
-        if (err) {
-          if (progressCallback) {
-            progressCallback(lastProgress, 'Failed');
-          }
-          logger.error(`Download error: ${err.message}`);
-          reject(err);
-          return;
-        }
-        
-        if (progressCallback) {
-          progressCallback(100, 'Completed');
-        }
-        
-        logger.info(`Download complete for ${fileInfo.file}`);
-        resolve(data);
-      });
-
-      // Monitor download progress
-      if (progressCallback) {
-        const progressInterval = setInterval(() => {
-          if (!download || !download.status) {
-            clearInterval(progressInterval);
+      const download = this.slskClient.download(
+        { file: fileInfo, path: downloadPath },
+        (err, data) => {
+          if (err) {
+            if (progressCallback) progressCallback(lastProgress, 'Failed');
+            logger.error(`Download error: ${err.message}`);
+            reject(err);
             return;
           }
+          if (progressCallback) progressCallback(100, 'Completed');
+          logger.info(`Download complete: ${fileInfo.file}`);
+          resolve(data);
+        }
+      );
 
-          if (download.status.state === 'Transferring') {
-            downloadStarted = true;
+      if (progressCallback) {
+        const interval = setInterval(() => {
+          if (!download || !download.status) {
+            clearInterval(interval);
+            return;
+          }
+          const st = download.status.state;
+          if (st === 'Transferring') {
             const progress = Math.floor((download.status.transferred / download.status.size) * 100);
             lastProgress = progress;
             progressCallback(progress, 'Downloading...');
-          } else if (download.status.state === 'Connecting') {
+          } else if (st === 'Connecting') {
             progressCallback(0, 'Connecting...');
-          } else if (download.status.state === 'Negotiating') {
-            progressCallback(0, 'Negotiating connection...');
-          } else if (download.status.state === 'Initializing') {
-            progressCallback(0, 'Initializing...');
-          } else if (download.status.state === 'Queued') {
-            progressCallback(0, `Queued (${download.status.position} in line)`);
-          } else if (download.status.state === 'Aborted') {
-            clearInterval(progressInterval);
+          } else if (st === 'Queued') {
+            progressCallback(0, `Queued (${download.status.position})`);
+          } else if (st === 'Aborted') {
+            clearInterval(interval);
             reject(new Error('Download aborted'));
-          } else if (download.status.state === 'Completed') {
-            clearInterval(progressInterval);
+          } else if (st === 'Completed') {
+            clearInterval(interval);
             progressCallback(100, 'Completed');
           }
         }, 500);
@@ -238,400 +166,220 @@ class SlskSearch {
     });
   }
 
-  async findAndDownloadSong(artistName, songTitle, albumTitle, downloadDir, progressCallback = null, preferredFormat = 'any') {
-    logger.info(`Finding and downloading "${songTitle}" by "${artistName}" from album "${albumTitle}"`);
-    
-    try {
-      if (progressCallback) {
-        progressCallback(0, 'Searching...');
-      }
+  /**
+   * Find and download the best match for a song.
+   * @param {string} artist
+   * @param {string} song
+   * @param {string} album
+   * @param {string} downloadDir
+   * @param {Function} progressCallback
+   * @param {string} preferredFormat
+   * @returns {Promise<Object>}
+   */
+  async findAndDownloadSong(artist, song, album, downloadDir, progressCallback = null, preferredFormat = 'any') {
+    logger.info(`Searching and downloading "${song}" by "${artist}" [${album}]`);
+    if (progressCallback) progressCallback(0, 'Searching...');
 
-      var cleanedQuery;
-      var songQuery = `${artistName} ${albumTitle}`;
+    // Compose query: artist + album (for best folder matches)
+    let query = `${artist} ${album}`.replace(/[^a-zA-Z0-9\s]/g, '').toLowerCase();
+    let results = await this.search(query);
 
-      cleanedQuery = songQuery.replace(/[^a-zA-Z0-9\s]/g, '').toLowerCase();
-      logger.debug(`Searching for artist, album. ${songQuery}"`);
-      let results = await this.searchSoulseek(cleanedQuery);
-      
-      if (results.length === 0) {
-        logger.warn(`No results found for album "${albumTitle}". Attempting fallback to album name without capitalization or punctuation.`);
-        cleanedQuery = albumTitle.replace(/[^a-zA-Z0-9\s]/g, '').toLowerCase();
-        logger.debug(`Searching Soulseek for cleaned album: "${cleanedQuery}"`);
-        results = await this.searchSoulseek(cleanedQuery);
-
-        if (results.length === 0) {
-          logger.warn(`No results found for any search attempts`);
-          throw new Error('No results found');
-        }
-      }
-      
-      // Score the results
-      const scoredResults = this.scoreResults(results, artistName, songTitle, albumTitle, preferredFormat);
-      
-      if (scoredResults.length === 0) {
-        logger.warn(`No valid results after scoring`);
-        throw new Error('No scored results available');
-      }
-      
-      // Update progress
-      if (progressCallback) {
-        progressCallback(0, 'Found sources, starting download...');
-      }
-      
-      logger.info(`Found ${scoredResults.length} potential sources, attempting downloads in order of score`);
-      
-      // Try downloading from the highest scored results
-      for (let i = 0; i < Math.min(3, scoredResults.length); i++) {
-        const resultGroup = scoredResults[i];
-        const fileToDownload = resultGroup.bestMatch;
-        
-        if (!fileToDownload) {
-          logger.warn(`No suitable file found in result group ${i + 1}`);
-          continue;
-        }
-        
-        logger.info(`Attempting download from user "${fileToDownload.user}" (score: ${resultGroup.score})`);
-        
-        // Clean up filename
-        const fileName = path.basename(fileToDownload.file.replace(/\\/g, path.sep))
-          .replace(/[<>:"/\\|?*]/g, '-');
-        
-        const filePath = path.join(downloadDir, fileName);
-        
-        try {
-          // Send progress update
-          if (progressCallback) {
-            progressCallback(0, `Downloading from ${fileToDownload.user}...`);
-          }
-          
-          const data = await this.downloadFile(fileToDownload, filePath, progressCallback);
-          logger.info(`Successfully downloaded to ${filePath}`);
-          return {
-            path: filePath,
-            data: data,
-            result: fileToDownload
-          };
-        } catch (err) {
-          logger.warn(`Download failed from user "${fileToDownload.user}": ${err.message}`);
-          logger.info(`Waiting 3 seconds before trying next result...`);
-          await new Promise(resolve => setTimeout(resolve, 3000));
-        }
-      }
-      
-      // If we get here, all download attempts failed
-      logger.error('All download attempts failed');
-      throw new Error('All download attempts failed');
-    } catch (error) {
-      logger.error(`Error in findAndDownloadSong: ${error.message}`);
-      throw error;
+    // Fallback: just album
+    if (!results.length) {
+      query = album.replace(/[^a-zA-Z0-9\s]/g, '').toLowerCase();
+      results = await this.search(query);
+      if (!results.length) throw new Error('No results found');
     }
+
+    // Score and sort
+    const scored = this.scoreResults(results, artist, song, album, preferredFormat);
+    if (!scored.length) throw new Error('No valid results after scoring');
+
+    if (progressCallback) progressCallback(0, 'Found sources, starting download...');
+
+    // Try top 5 results (in case of failures)
+    for (let i = 0; i < Math.min(5, scored.length); i++) {
+      const fileToDownload = scored[i];
+      const fileName = path.basename(fileToDownload.file.replace(/\\/g, path.sep)).replace(/[<>:"/\\|?*]/g, '-');
+      const filePath = path.join(downloadDir, fileName);
+
+      try {
+        if (progressCallback) progressCallback(0, `Downloading from ${fileToDownload.user}...`);
+        const data = await this.downloadFile(fileToDownload, filePath, progressCallback);
+        logger.info(`Downloaded to ${filePath}`);
+        return { path: filePath, data, result: fileToDownload };
+      } catch (err) {
+        logger.warn(`Download failed from user "${fileToDownload.user}": ${err.message}`);
+        await new Promise(res => setTimeout(res, 2000));
+      }
+    }
+    throw new Error('All download attempts failed');
   }
 
-  // New method for downloading an entire album
-  async findAndDownloadAlbum(artistName, albumTitle, tracks, downloadDir, progressCallback = null, preferredFormat = 'any') {
-    logger.info(`Finding and downloading album "${albumTitle}" by "${artistName}" with ${tracks.length} tracks`);
-    
-    try {
-      // Send initial progress update
-      if (progressCallback) {
-        progressCallback(0, 'Searching for album...');
-      }
-      
-      // First search for the complete album
-      const albumQuery = `${artistName} ${albumTitle}`;
-      logger.debug(`Searching for album: "${albumQuery}"`);
-      let results = await this.searchSoulseek(albumQuery, 15000); // Longer timeout for album search
-      
-      if (results.length === 0) {
-        logger.warn(`No results found for album query. Trying alternative search.`);
-        // Try alternate query with just the album name
-        const simpleQuery = albumTitle.replace(/[\(\)\[\]]/g, ''); // Remove parentheses that might confuse search
-        results = await this.searchSoulseek(simpleQuery, 15000);
-      }
-      
-      if (results.length === 0) {
-        throw new Error('No album matches found');
-      }
-      
-      // Identify potential complete albums by grouping files by user and folder
-      const albumCandidates = this.findAlbumCandidates(results, artistName, albumTitle, tracks, preferredFormat);
-      
-      if (albumCandidates.length === 0) {
-        throw new Error('No complete album matches found');
-      }
-      
-      logger.info(`Found ${albumCandidates.length} potential sources for complete album`);
-      
-      // Update progress
-      if (progressCallback) {
-        progressCallback(10, 'Found potential album matches, preparing download...');
-      }
-      
-      // Attempt to download the album from the best candidate
-      const downloadedTracks = [];
-      let downloadSuccess = false;
-      
-      // Try the top 3 candidates
-      for (let i = 0; i < Math.min(3, albumCandidates.length); i++) {
-        const candidate = albumCandidates[i];
-        
-        try {
-          if (progressCallback) {
-            progressCallback(15, `Downloading album from ${candidate.user}...`);
-          }
-          
-          logger.info(`Attempting album download from user "${candidate.user}" (score: ${candidate.score})`);
-          
-          // Download each track in the album
-          const totalTracks = candidate.tracks.length;
-          let successfulDownloads = 0;
-          
-          for (let j = 0; j < totalTracks; j++) {
-            const track = candidate.tracks[j];
-            const trackFile = track.file;
-            
-            // Clean up filename
-            const fileName = path.basename(trackFile.replace(/\\/g, path.sep))
-              .replace(/[<>:"/\\|?*]/g, '-');
-            
-            const filePath = path.join(downloadDir, fileName);
-            
-            try {
-              // Update progress for each track
-              if (progressCallback) {
-                const overallProgress = 15 + Math.floor((85 * j) / totalTracks);
-                progressCallback(overallProgress, `Downloading track ${j+1}/${totalTracks}...`);
-              }
-              
-              const data = await this.downloadFile(track, filePath);
-              
-              // Add to our successful downloads
-              downloadedTracks.push({
-                title: this.extractTrackTitle(fileName, tracks[j]?.name),
-                path: filePath,
-                track: j + 1
-              });
-              
-              successfulDownloads++;
-              
-            } catch (trackError) {
-              logger.warn(`Failed to download track "${fileName}": ${trackError.message}`);
-            }
-          }
-          
-          // If we got at least 80% of the tracks, consider it a success
-          if (successfulDownloads >= 0.8 * totalTracks) {
-            downloadSuccess = true;
-            
-            // Final progress update
+  /**
+   * Find and download an album (all tracks).
+   * @param {string} artist
+   * @param {string} album
+   * @param {Array} tracks
+   * @param {string} downloadDir
+   * @param {Function} progressCallback
+   * @param {string} preferredFormat
+   * @returns {Promise<Object>}
+   */
+  async findAndDownloadAlbum(artist, album, tracks, downloadDir, progressCallback = null, preferredFormat = 'any') {
+    logger.info(`Searching and downloading album "${album}" by "${artist}"`);
+    if (progressCallback) progressCallback(0, 'Searching for album...');
+
+    let query = `${artist} ${album}`.replace(/[^a-zA-Z0-9\s]/g, '').toLowerCase();
+    let results = await this.search(query, 15000);
+
+    // Fallback: just album
+    if (!results.length) {
+      query = album.replace(/[^a-zA-Z0-9\s]/g, '').toLowerCase();
+      results = await this.search(query, 15000);
+      if (!results.length) throw new Error('No album matches found');
+    }
+
+    // Group by user/folder, score for speed/slots/accuracy
+    const candidates = this.scoreAlbumCandidates(results, artist, album, tracks, preferredFormat);
+    if (!candidates.length) throw new Error('No complete album matches found');
+
+    if (progressCallback) progressCallback(10, 'Found album sources, preparing download...');
+
+    // Try top 3 candidates
+    for (let i = 0; i < Math.min(3, candidates.length); i++) {
+      const candidate = candidates[i];
+      let downloadedTracks = [];
+      let successCount = 0;
+
+      try {
+        if (progressCallback) progressCallback(15, `Downloading album from ${candidate.user}...`);
+        for (let j = 0; j < candidate.tracks.length; j++) {
+          const track = candidate.tracks[j];
+          const fileName = path.basename(track.file.replace(/\\/g, path.sep)).replace(/[<>:"/\\|?*]/g, '-');
+          const filePath = path.join(downloadDir, fileName);
+
+          try {
             if (progressCallback) {
-              progressCallback(100, `Downloaded ${successfulDownloads}/${totalTracks} tracks`);
+              const prog = 15 + Math.floor((85 * j) / candidate.tracks.length);
+              progressCallback(prog, `Downloading track ${j + 1}/${candidate.tracks.length}...`);
             }
-            
-            logger.info(`Successfully downloaded ${successfulDownloads}/${totalTracks} tracks from album "${albumTitle}"`);
-            break;
-          } else {
-            logger.warn(`Only downloaded ${successfulDownloads}/${totalTracks} tracks from user "${candidate.user}", trying next source...`);
+            await this.downloadFile(track, filePath);
+            downloadedTracks.push({
+              title: this.extractTrackTitle(fileName, tracks[j]?.name),
+              path: filePath,
+              track: j + 1
+            });
+            successCount++;
+          } catch (trackErr) {
+            logger.warn(`Failed to download track "${fileName}": ${trackErr.message}`);
           }
-          
-        } catch (candidateError) {
-          logger.warn(`Download failed from user "${candidate.user}": ${candidateError.message}`);
         }
-        
-        // If we failed with this candidate, wait before trying the next one
-        if (!downloadSuccess && i < albumCandidates.length - 1) {
-          logger.info(`Waiting 3 seconds before trying next album source...`);
-          await new Promise(resolve => setTimeout(resolve, 3000));
+        // Success if at least 80% of tracks downloaded
+        if (successCount >= 0.8 * candidate.tracks.length) {
+          if (progressCallback) progressCallback(100, `Downloaded ${successCount}/${candidate.tracks.length} tracks`);
+          logger.info(`Album download success: ${successCount}/${candidate.tracks.length}`);
+          return { success: true, tracks: downloadedTracks };
         }
+      } catch (err) {
+        logger.warn(`Album download failed from user "${candidate.user}": ${err.message}`);
       }
-      
-      if (!downloadSuccess) {
-        throw new Error('Failed to download album from any source');
-      }
-      
-      return {
-        success: true,
-        tracks: downloadedTracks
-      };
-    } catch (error) {
-      logger.error(`Error in findAndDownloadAlbum: ${error.message}`);
-      throw error;
+      await new Promise(res => setTimeout(res, 2000));
     }
+    throw new Error('Failed to download album from any source');
   }
 
-  // Helper function to find album candidates
-  findAlbumCandidates(results, artistName, albumTitle, tracks, preferredFormat) {
-    logger.debug(`Analyzing ${results.length} results for album "${albumTitle}" by "${artistName}"`);
-    
-    // Normalize inputs for case-insensitive comparison
-    const normalizedArtist = artistName.toLowerCase();
-    const normalizedAlbum = albumTitle.toLowerCase();
+  /**
+   * Score album candidates (grouped by user/folder) for speed, slots, and accuracy.
+   */
+  scoreAlbumCandidates(results, artist, album, tracks, preferredFormat = 'any') {
+    const norm = s => (s || '').toLowerCase();
+    const nArtist = norm(artist);
+    const nAlbum = norm(album);
+    const nFormat = preferredFormat && preferredFormat !== 'any' ? norm(preferredFormat) : null;
     const trackCount = tracks.length;
-    
-    // Group results by user and folder
-    const folderGroups = {};
-    
+
+    // Group by user/folder
+    const groups = {};
     results.forEach(result => {
-      // Convert Windows paths to proper format
       const normalizedPath = result.file.replace(/\\/g, '/');
-      const parts = normalizedPath.split('/');
-      const fileName = parts[parts.length - 1].toLowerCase();
-      
-      // Extract folder name - try to get parent folder
-      let folderName = '';
-      if (parts.length > 1) {
-        folderName = parts[parts.length - 2].toLowerCase();
-      }
-      
-      // Create a key for the folder grouping
-      const folderKey = `${result.user}_${folderName}`;
-      
-      if (!folderGroups[folderKey]) {
-        folderGroups[folderKey] = {
+      const fileName = path.basename(normalizedPath).toLowerCase();
+      const folderName = normalizedPath.split('/').slice(-2, -1)[0]?.toLowerCase() || '';
+      const groupKey = `${result.user}::${folderName}`;
+      if (!groups[groupKey]) {
+        groups[groupKey] = {
           user: result.user,
-          folderName: folderName,
-          score: 0,
+          folderName,
           files: [],
-          fileTypes: new Set()
+          score: 0,
+          fileTypes: new Set(),
         };
-        
-        // Score the folder name
-        if (folderName.includes(normalizedArtist)) {
-          folderGroups[folderKey].score += 10;
-        }
-
-        if (folderName.includes(normalizedAlbum)) {
-          folderGroups[folderKey].score += 15;
-        }
       }
-      
-      // Add file to the folder
-      folderGroups[folderKey].files.push(result);
-      
-      // Track file extensions
-      const fileExt = path.extname(fileName).toLowerCase().substring(1);
-      folderGroups[folderKey].fileTypes.add(fileExt);
+      groups[groupKey].files.push(result);
+      groups[groupKey].fileTypes.add(path.extname(fileName).replace('.', ''));
     });
-    
-    // Convert to array for filtering and sorting
-    let candidates = Object.values(folderGroups);
-    
-    // Keep only folders with a reasonable number of files
-    // (at least half the number of tracks we're looking for)
-    candidates = candidates.filter(c => c.files.length >= (trackCount / 2));
-    
-    // Adjust scores based on additional factors
-    candidates.forEach(candidate => {
-      // --- Base Score (Folder Name Match) --- already applied before this loop
 
-      // --- File Count Accuracy Bonus ---
-      const fileCountDiff = Math.abs(candidate.files.length - trackCount);
-      if (fileCountDiff <= 2) {
-        candidate.score += 15; // Perfect or nearly perfect match
-        logger.debug(`Candidate ${candidate.user}/${candidate.folderName}: +15 points (file count diff ${fileCountDiff})`);
-      } else if (fileCountDiff <= 5) {
-        candidate.score += 8; // Reasonably close
-        logger.debug(`Candidate ${candidate.user}/${candidate.folderName}: +8 points (file count diff ${fileCountDiff})`);
+    // Score each group
+    const candidates = Object.values(groups).map(group => {
+      let score = 0;
+      // --- 1. Speed & Slots (Primary) ---
+      const avgSpeed = group.files.reduce((sum, f) => sum + (f.speed || 0), 0) / (group.files.length || 1);
+      const hasSlots = group.files.some(f => f.slots);
+      if (hasSlots) score += 100;
+      score += Math.min(50, Math.floor(avgSpeed / 1000));
+
+      // --- 2. Metadata (Secondary) ---
+      if (group.folderName.includes(nArtist)) score += 10;
+      if (group.folderName.includes(nAlbum)) score += 10;
+
+      // --- 3. File count accuracy ---
+      const audioFiles = group.files.filter(f => ['.mp3', '.flac', '.wav'].includes(path.extname(f.file).toLowerCase()));
+      const fileCountDiff = Math.abs(audioFiles.length - trackCount);
+      if (fileCountDiff <= 2) score += 20;
+      else if (fileCountDiff <= 5) score += 10;
+
+      // --- 4. Format consistency ---
+      if (group.fileTypes.size === 1) {
+        const type = [...group.fileTypes][0];
+        if (nFormat && type === nFormat) score += 10;
+        if (!nFormat && type === 'flac') score += 5;
+        else if (!nFormat && type === 'wav') score += 3;
+      } else if (group.fileTypes.size > 1) {
+        score -= 5;
       }
 
-      // --- File Type Scoring (Prioritizing Preferred Format) ---
-      const preferredFormatLower = preferredFormat?.toLowerCase(); // Handle potential undefined/null
-      if (candidate.fileTypes.size === 1) {
-        const fileType = [...candidate.fileTypes][0];
-        if (preferredFormatLower && preferredFormatLower !== 'any' && fileType === preferredFormatLower) {
-          candidate.score += 20; // High bonus for matching preferred format
-          logger.debug(`Candidate ${candidate.user}/${candidate.folderName}: +20 points (matches preferred format: ${preferredFormat})`);
-        } else if (preferredFormatLower === 'any' || !preferredFormatLower) {
-           // If preference is 'any' or not set, give bonus for lossless
-           if (fileType === 'flac') {
-             candidate.score += 8;
-             logger.debug(`Candidate ${candidate.user}/${candidate.folderName}: +8 points (FLAC format, preference 'any')`);
-           } else if (fileType === 'wav') {
-             candidate.score += 5;
-             logger.debug(`Candidate ${candidate.user}/${candidate.folderName}: +5 points (WAV format, preference 'any')`);
-           } else {
-             candidate.score += 2; // Small bonus for consistency
-             logger.debug(`Candidate ${candidate.user}/${candidate.folderName}: +2 points (consistent type: ${fileType}, preference 'any')`);
-           }
-        } else {
-           // Consistent type, but doesn't match non-'any' preference
-           candidate.score += 2;
-           logger.debug(`Candidate ${candidate.user}/${candidate.folderName}: +2 points (consistent type: ${fileType}, but doesn't match preference ${preferredFormat})`);
-        }
-      } else if (candidate.fileTypes.size > 1) {
-        candidate.score -= 5; // Penalty for inconsistent file types
-        logger.debug(`Candidate ${candidate.user}/${candidate.folderName}: -5 points (inconsistent file types: ${[...candidate.fileTypes].join(', ')})`);
-      }
+      // --- 5. Penalties ---
+      if (!hasSlots) score -= 30;
+      if (avgSpeed < 100) score -= 10;
+      if (audioFiles.length < trackCount / 2) score = 0; // Disqualify
 
-      // --- Speed and Slot Scoring ---
-      const totalSpeed = candidate.files.reduce((sum, file) => sum + (file.speed || 0), 0);
-      const avgSpeed = candidate.files.length > 0 ? totalSpeed / candidate.files.length : 0;
-      const hasSlots = candidate.files.some(file => file.slots);
-
-      // Bonus for average speed (up to 10 points)
-      // Scale: 1 point per 1000 kbps, max 10 points
-      const speedBonus = Math.min(10, Math.floor(avgSpeed / 1000));
-      if (speedBonus > 0) {
-        candidate.score += speedBonus;
-        logger.debug(`Candidate ${candidate.user}/${candidate.folderName}: +${speedBonus} points (avg speed ${avgSpeed.toFixed(0)} kbps)`);
-      }
-
-      // Bonus for slot availability (5 points)
-      if (hasSlots) {
-        candidate.score += 5;
-        logger.debug(`Candidate ${candidate.user}/${candidate.folderName}: +5 points (slots available)`);
-      }
-      
-      // Clean up candidate.tracks and map files to the tracks array
-      candidate.tracks = candidate.files.filter(file => {
-        const ext = path.extname(file.file).toLowerCase();
-        // Only include audio files
-        return ['.mp3', '.flac', '.wav'].includes(ext);
-      }).map(file => file);
-      
-      // Sort tracks by filename (which often includes track number)
-      candidate.tracks.sort((a, b) => {
+      // Prepare tracks (sorted by filename)
+      const tracksSorted = audioFiles.sort((a, b) => {
         const aName = path.basename(a.file).toLowerCase();
         const bName = path.basename(b.file).toLowerCase();
         return aName.localeCompare(bName);
       });
-      
-      // --- Final adjustment based on actual number of *audio* tracks ---
-      // Ensure we only count valid audio files for disqualification
-      const audioTrackCount = candidate.tracks.length; // .tracks is already filtered for audio
-      if (audioTrackCount < (trackCount / 2)) {
-        logger.debug(`Candidate ${candidate.user}/${candidate.folderName}: Disqualified (only ${audioTrackCount} audio tracks found, need at least ${Math.ceil(trackCount / 2)})`);
-        candidate.score = 0; // Disqualify if too few audio files
-      }
+
+      return {
+        ...group,
+        score,
+        tracks: tracksSorted,
+      };
     });
-    
-    // Filter out disqualified candidates
-    candidates = candidates.filter(c => c.score > 0);
-    
-    // Sort by score descending
-    candidates.sort((a, b) => b.score - a.score);
-    
-    return candidates;
+
+    // Filter and sort
+    return candidates.filter(c => c.score > 0).sort((a, b) => b.score - a.score);
   }
 
-  // Helper to extract track title from filename
+  /**
+   * Extract track title from filename.
+   */
   extractTrackTitle(fileName, defaultTitle) {
-    // Remove file extension
     const nameWithoutExt = fileName.replace(/\.[^/.]+$/, "");
-    
-    // Try to remove track number patterns
-    let cleanedName = nameWithoutExt
-      .replace(/^\d+\s*[-–—.)\]]\s*/, '') // Remove leading numbers with separators
-      .replace(/^\d+\s+/, '');             // Remove just leading numbers with space
-    
-    // If the result seems too short, use the original name without extension
-    if (cleanedName.length < 3 && nameWithoutExt.length > cleanedName.length) {
-      cleanedName = nameWithoutExt;
-    }
-    
-    // Return either the extracted name or the default title
-    return cleanedName || defaultTitle || fileName;
+    let cleaned = nameWithoutExt.replace(/^\d+\s*[-–—.)\]]\s*/, '').replace(/^\d+\s+/, '');
+    if (cleaned.length < 3 && nameWithoutExt.length > cleaned.length) cleaned = nameWithoutExt;
+    return cleaned || defaultTitle || fileName;
   }
 }
 
-module.exports = SlskSearch;
+module.exports = SoulseekSearch;

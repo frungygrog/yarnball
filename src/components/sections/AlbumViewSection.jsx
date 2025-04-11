@@ -2,6 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Download, Loader } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 
+function getAlbumImageSrc(image) {
+  if (typeof image === 'string' && image.startsWith('/')) {
+    return `localfile://${image}`;
+  }
+  return image || '/api/placeholder/200/200';
+}
+
 import SongItem from '../common/SongItem';
 
 const AlbumViewSection = ({
@@ -142,7 +149,7 @@ const AlbumViewSection = ({
           <div className="album-cover">
             <img 
               id="album-cover-img" 
-              src={album.image || '/api/placeholder/200/200'} 
+              src={getAlbumImageSrc(album.image)} 
               alt="Album Cover" 
             />
           </div>

@@ -3,6 +3,14 @@ import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, Heart } from 'luc
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { formatTime } from '../../lib/utils';
+import './PlayerBar.css'; // Import the component-specific CSS
+
+function getAlbumImageSrc(image) {
+  if (typeof image === 'string' && image.startsWith('/')) {
+    return `localfile://${image}`;
+  }
+  return image || '/api/placeholder/60/60';
+}
 
 const PlayerBar = ({ 
   currentTrackIndex, 
@@ -110,7 +118,7 @@ const PlayerBar = ({
               >
                 <img 
                   id="current-track-image" 
-                  src={currentTrack?.image || '/api/placeholder/60/60'} 
+                  src={getAlbumImageSrc(currentTrack?.image)} 
                   alt="Track" 
                   className="block w-[60px] h-[60px]" // Ensure image size is consistent
                 />

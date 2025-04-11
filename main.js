@@ -3,6 +3,9 @@ const path = require('path');
 const fs = require('fs');
 const slsk = require('slsk-client');
 const { shell } = require('electron');
+const imageSize = require('image-size');
+const mm = require('music-metadata');
+const { writeFileSync, existsSync, readFileSync } = require('fs');
 
 // Import custom utilities
 const LastFmAPI = require('./src/api/lastfm');
@@ -19,7 +22,63 @@ let lastFmApi;
 let slskSearch;
 let defaultLastFmKey = '0ef47b7d4d7a5bd325bb2646837b4908';
 let activeDownloads = new Map();
+
+/**
+ * Cancel an active download by downloadId.
+ * This will abort the download if possible and clean up state.
+ */
+ipcMain.handle('cancel-download', async (event, downloadId) => {
+  logger.info(`Request to cancel download: ${downloadId}`);
+  const download = activeDownloads.get(downloadId);
+  if (download && typeof download.abort === 'function') {
+    try {
+      download.abort();
+      logger.info(`Download ${downloadId} aborted successfully`);
+      activeDownloads.delete(downloadId);
+      return { success: true };
+    } catch (err) {
+      logger.error(`Error aborting download ${downloadId}: ${err.message}`);
+      return { success: false, error: err.message };
+    }
+  } else {
+    logger.warn(`No active download found for id: ${downloadId}`);
+    return { success: false, error: 'No active download found' };
+  }
+});
 let customProtocolRegistered = false;
+
+/**
+ * Download an image from a URL and save it to a specified path.
+ */
+const https = require('https');
+const http = require('http');
+ipcMain.handle('save-album-art', async (event, { url, destPath }) => {
+  logger.info(`Saving album art from ${url} to ${destPath}`);
+  return new Promise((resolve, reject) => {
+    const client = url.startsWith('https') ? https : http;
+    client.get(url, (res) => {
+      if (res.statusCode !== 200) {
+        logger.error(`Failed to download image: ${res.statusCode}`);
+        reject(new Error(`Failed to download image: ${res.statusCode}`));
+        return;
+      }
+      const fileStream = fs.createWriteStream(destPath);
+      res.pipe(fileStream);
+      fileStream.on('finish', () => {
+        fileStream.close();
+        logger.info(`Album art saved to ${destPath}`);
+        resolve({ success: true, path: destPath });
+      });
+      fileStream.on('error', (err) => {
+        logger.error(`Error saving album art: ${err.message}`);
+        reject(err);
+      });
+    }).on('error', (err) => {
+      logger.error(`Error downloading album art: ${err.message}`);
+      reject(err);
+    });
+  });
+});
 
 function createWindow() {
   logger.info('Creating main application window');
@@ -56,18 +115,32 @@ function createWindow() {
 app.whenReady().then(() => {
   logger.info('Application ready, initializing');
   
-  // Register protocol for audio files
+  // Register protocol for audio and image files
   protocol.registerFileProtocol('localfile', (request, callback) => {
     const url = request.url.substr(12); // Remove 'localfile://' prefix
     const decodedUrl = decodeURI(url);
     try {
+      // Only allow serving audio and image files from the user's Music/yarnball directory
+      const homeDir = app.getPath('home');
+      const yarnballDir = path.join(homeDir, 'Music', 'yarnball');
+      if (!decodedUrl.startsWith(yarnballDir)) {
+        logger.error(`Attempted to access file outside of yarnball directory: ${decodedUrl}`);
+        return callback(404);
+      }
+      // Only allow audio and image files
+      const allowedExtensions = ['.mp3', '.flac', '.wav', '.ogg', '.m4a', '.aac', '.png', '.jpg', '.jpeg'];
+      const ext = path.extname(decodedUrl).toLowerCase();
+      if (!allowedExtensions.includes(ext)) {
+        logger.error(`Attempted to access disallowed file type: ${decodedUrl}`);
+        return callback(404);
+      }
       return callback(decodedUrl);
     } catch (error) {
       logger.error(`Protocol handler error: ${error}`);
       return callback(404);
     }
   });
-  
+
   customProtocolRegistered = true;
   
   createWindow();
@@ -443,37 +516,74 @@ ipcMain.handle('download-song', async (event, { artist, title, album, downloadId
       downloadPath = albumDir;
     }
 
-    // NEW CODE: Check if this song already exists in the directory
-    // This prevents file system duplicates
+    // Check for album.png in the album folder
+    const albumPngPath = path.join(downloadPath, 'album.png');
+    const coverPngPath = path.join(downloadPath, 'cover.png');
+
+    // Check if this song already exists in the directory
     let existingFile = null;
-    
-    // Check if the song already exists in the download directory
+    let imagePath = null;
     try {
       const files = fs.readdirSync(downloadPath);
       const sanitizedTitle = sanitizeFileName(title).toLowerCase();
-      
-      // Look for files that match the title (case insensitive)
       existingFile = files.find(file => {
         const fileName = path.basename(file, path.extname(file)).toLowerCase();
         return fileName.includes(sanitizedTitle);
       });
-      
+
       if (existingFile) {
         const existingPath = path.join(downloadPath, existingFile);
+
+        // 1. Try embedded art
+        let embeddedArtFound = false;
+        if (!existsSync(coverPngPath) && !existsSync(albumPngPath)) {
+          try {
+            const metadata = await mm.parseFile(existingPath, { duration: false });
+            if (metadata.common.picture && metadata.common.picture.length > 0) {
+              const pic = metadata.common.picture[0];
+              if (pic.format === 'image/png' || pic.format === 'image/jpeg') {
+                writeFileSync(coverPngPath, pic.data);
+                logger.info(`Extracted embedded album art to ${coverPngPath}`);
+                embeddedArtFound = true;
+              }
+            }
+          } catch (metaErr) {
+            logger.warn(`Error extracting embedded art: ${metaErr.message}`);
+          }
+        }
+
+        // 2. If no embedded art, and no album.png, try fallback image
+        if (!embeddedArtFound && !existsSync(albumPngPath) && !existsSync(coverPngPath)) {
+          const fallback = findBestCoverImage(downloadPath);
+          if (fallback) {
+            try {
+              // Save as cover.png
+              const imgData = readFileSync(fallback);
+              writeFileSync(coverPngPath, imgData);
+              logger.info(`Saved fallback cover image as ${coverPngPath}`);
+            } catch (imgErr) {
+              logger.warn(`Error saving fallback cover image: ${imgErr.message}`);
+            }
+          }
+        }
+
+        // 3. Set image path: cover.png > album.png > null
+        if (existsSync(coverPngPath)) imagePath = coverPngPath;
+        else if (existsSync(albumPngPath)) imagePath = albumPngPath;
+        else imagePath = null;
+
         logger.info(`Song already exists in directory: ${existingPath}`);
-        
-        // Return the existing file instead of downloading again
         return {
           success: true,
           message: `Song "${title}" by "${artist}" already exists at ${existingPath}`,
           path: existingPath,
           format: path.extname(existingPath).substring(1),
-          alreadyExists: true
+          alreadyExists: true,
+          image: imagePath
         };
       }
     } catch (err) {
       logger.warn(`Error checking for existing files: ${err.message}`);
-      // Continue with download if there's an error checking for existing files
     }
 
     // Track download progress
@@ -497,6 +607,44 @@ ipcMain.handle('download-song', async (event, { artist, title, album, downloadId
       preferredFormat
     );
 
+    // 1. Try embedded art from the downloaded file
+    let embeddedArtFound = false;
+    if (!existsSync(coverPngPath) && !existsSync(albumPngPath)) {
+      try {
+        const metadata = await mm.parseFile(result.path, { duration: false });
+        if (metadata.common.picture && metadata.common.picture.length > 0) {
+          const pic = metadata.common.picture[0];
+          if (pic.format === 'image/png' || pic.format === 'image/jpeg') {
+            writeFileSync(coverPngPath, pic.data);
+            logger.info(`Extracted embedded album art to ${coverPngPath}`);
+            embeddedArtFound = true;
+          }
+        }
+      } catch (metaErr) {
+        logger.warn(`Error extracting embedded art: ${metaErr.message}`);
+      }
+    }
+
+    // 2. If no embedded art, and no album.png, try fallback image
+    if (!embeddedArtFound && !existsSync(albumPngPath) && !existsSync(coverPngPath)) {
+      const fallback = findBestCoverImage(downloadPath);
+      if (fallback) {
+        try {
+          // Save as cover.png
+          const imgData = readFileSync(fallback);
+          writeFileSync(coverPngPath, imgData);
+          logger.info(`Saved fallback cover image as ${coverPngPath}`);
+        } catch (imgErr) {
+          logger.warn(`Error saving fallback cover image: ${imgErr.message}`);
+        }
+      }
+    }
+
+    // 3. Set image path: cover.png > album.png > null
+    if (existsSync(coverPngPath)) imagePath = coverPngPath;
+    else if (existsSync(albumPngPath)) imagePath = albumPngPath;
+    else imagePath = null;
+
     // Fetch album info if album is unknown
     let albumName = album;
     if (album === 'Unknown Album') {
@@ -516,18 +664,78 @@ ipcMain.handle('download-song', async (event, { artist, title, album, downloadId
       artist: artist,
       album: albumName,
       path: result.path,
-      format: path.extname(result.path).substring(1)
+      format: path.extname(result.path).substring(1),
+      image: imagePath
     });
 
     return {
       success: true,
       message: `Downloaded "${title}" by "${artist}" from album "${albumName}" to ${result.path}`,
       path: result.path,
-      format: path.extname(result.path).substring(1)
+      format: path.extname(result.path).substring(1),
+      image: imagePath
     };
   } catch (error) {
     logger.error(`Download song error: ${error.message}`);
     throw error;
+  }
+});
+
+/**
+ * Find the best 1:1 aspect ratio image (png/jpg/jpeg) in a directory.
+ * Returns the absolute path to the best candidate, or null if none found.
+ */
+function findBestCoverImage(dir) {
+  try {
+    const files = fs.readdirSync(dir);
+    const imageFiles = files.filter(f =>
+      /\.(jpe?g|png)$/i.test(f)
+    );
+    let best = null;
+    let bestScore = Infinity;
+    for (const file of imageFiles) {
+      try {
+        const filePath = path.join(dir, file);
+        const { width, height } = imageSize(filePath);
+        if (!width || !height) continue;
+        // Only consider images at least 200x200
+        if (width < 200 || height < 200) continue;
+        const aspect = width / height;
+        const score = Math.abs(aspect - 1);
+        if (score < bestScore) {
+          best = filePath;
+          bestScore = score;
+        }
+      } catch (imgErr) {
+        logger.warn(`Error reading image size for ${file}: ${imgErr.message}`);
+      }
+    }
+    return best || null;
+  } catch (err) {
+    logger.warn(`Error finding cover image in ${dir}: ${err.message}`);
+    return null;
+  }
+}
+
+/**
+ * IPC handler: Check for local album art in a folder (cover.png or album.png)
+ * Returns the absolute path if found, or null.
+ */
+ipcMain.handle('get-local-album-art', async (event, albumDir) => {
+  try {
+    const coverPath = path.join(albumDir, 'cover.png');
+    const albumPath = path.join(albumDir, 'album.png');
+    if (fs.existsSync(coverPath)) return coverPath;
+    if (fs.existsSync(albumPath)) return albumPath;
+    // Optionally check for jpgs as well
+    const coverJpg = path.join(albumDir, 'cover.jpg');
+    const albumJpg = path.join(albumDir, 'album.jpg');
+    if (fs.existsSync(coverJpg)) return coverJpg;
+    if (fs.existsSync(albumJpg)) return albumJpg;
+    return null;
+  } catch (err) {
+    logger.warn(`Error checking for local album art in ${albumDir}: ${err.message}`);
+    return null;
   }
 });
 

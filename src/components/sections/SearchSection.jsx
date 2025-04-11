@@ -7,6 +7,7 @@ import { Alert, AlertDescription } from '../../components/ui/alert';
 import SongItem from '../common/SongItem';
 import AlbumCard from '../common/AlbumCard';
 import ArtistCard from '../common/ArtistCard';
+import './SearchSection.css'; // Import the component-specific CSS
 
 const SearchSection = ({
   setSearchResultsData,
@@ -143,7 +144,7 @@ const SearchSection = ({
 
   return (
     <div id="search-section" className={`content-section ${activeSection === 'search' ? 'active' : ''}`}>
-      <div className="search-container">
+      <div className="search-container sticky-search-bar">
         {/* Updated search bar container with max-width and relative positioning */}
         <div className="search-input-container relative max-w-3xl mx-auto">
           <Input
@@ -217,7 +218,10 @@ const SearchSection = ({
               <div className="results-section songs-section">
                 <h3 className="text-lg font-bold mb-4">songs</h3>
                 <div className="song-list">
-                  {filteredResults.songs.map(song => (
+                  {(currentFilter === 'all'
+                    ? filteredResults.songs.slice(0, 5)
+                    : filteredResults.songs
+                  ).map(song => (
                     <SongItem
                       key={song.id}
                       song={song}
@@ -228,6 +232,16 @@ const SearchSection = ({
                     />
                   ))}
                 </div>
+                {currentFilter === 'all' && filteredResults.songs.length > 5 && (
+                  <div className="see-more-link mt-2">
+                    <button
+                      className="text-blue-600 hover:underline text-sm"
+                      onClick={() => setCurrentFilter('songs')}
+                    >
+                      see more songs
+                    </button>
+                  </div>
+                )}
               </div>
             )}
 
@@ -236,7 +250,10 @@ const SearchSection = ({
               <div className="results-section albums-section">
                 <h3 className="text-lg font-bold mb-4">albums</h3>
                 <div className="albums-grid">
-                  {filteredResults.albums.map(album => (
+                  {(currentFilter === 'all'
+                    ? filteredResults.albums.slice(0, 5)
+                    : filteredResults.albums
+                  ).map(album => (
                     <AlbumCard
                       key={album.id}
                       album={album}
@@ -244,6 +261,16 @@ const SearchSection = ({
                     />
                   ))}
                 </div>
+                {currentFilter === 'all' && filteredResults.albums.length > 5 && (
+                  <div className="see-more-link mt-2">
+                    <button
+                      className="text-blue-600 hover:underline text-sm"
+                      onClick={() => setCurrentFilter('albums')}
+                    >
+                      see more albums
+                    </button>
+                  </div>
+                )}
               </div>
             )}
 
@@ -252,7 +279,10 @@ const SearchSection = ({
               <div className="results-section artists-section">
                 <h3 className="text-lg font-bold mb-4">artists</h3>
                 <div className="artists-grid">
-                  {filteredResults.artists.map(artist => (
+                  {(currentFilter === 'all'
+                    ? filteredResults.artists.slice(0, 5)
+                    : filteredResults.artists
+                  ).map(artist => (
                     <ArtistCard
                       key={artist.id}
                       artist={artist}
@@ -260,6 +290,16 @@ const SearchSection = ({
                     />
                   ))}
                 </div>
+                {currentFilter === 'all' && filteredResults.artists.length > 5 && (
+                  <div className="see-more-link mt-2">
+                    <button
+                      className="text-blue-600 hover:underline text-sm"
+                      onClick={() => setCurrentFilter('artists')}
+                    >
+                      see more artists
+                    </button>
+                  </div>
+                )}
               </div>
             )}
 

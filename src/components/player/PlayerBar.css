@@ -1,0 +1,110 @@
+/* Player Bar */
+.player-bar {
+  grid-area: player-bar;
+  @apply bg-muted py-0 px-4 flex items-center justify-between z-20;
+}
+
+.now-playing {
+  @apply flex items-center w-[30%];
+}
+
+.track-image {
+  @apply w-[56px] h-[56px] mr-4;
+}
+
+.track-image img {
+  @apply w-full h-full object-cover rounded;
+}
+
+.track-info {
+  @apply flex flex-col max-w-[180px];
+}
+
+.track-name {
+  @apply text-foreground text-sm font-medium mb-1 whitespace-nowrap overflow-hidden text-ellipsis;
+}
+
+.track-artist {
+  @apply text-muted-foreground text-xs whitespace-nowrap overflow-hidden text-ellipsis;
+}
+
+.player-controls {
+  @apply flex flex-col items-center w-[40%];
+}
+
+.control-buttons {
+  @apply flex items-center gap-5 mb-2;
+}
+
+.control-btn {
+  @apply text-muted-foreground text-sm py-1;
+}
+
+button.play-btn { /* Increased specificity */
+  @apply text-black text-base w-8 h-8 bg-white flex items-center justify-center;
+  border-radius: 9999px; /* Apply circle shape */
+}
+
+.play-btn.playing i {
+  @apply text-black;
+}
+
+.progress-container {
+  @apply flex items-center w-full gap-2;
+}
+
+#current-time, #total-time {
+  @apply text-muted-foreground text-xs min-w-[40px];
+}
+
+.progress-bar {
+  @apply h-1 bg-accent rounded flex-1 cursor-pointer;
+}
+
+.progress {
+  @apply h-full bg-muted-foreground rounded w-0;
+}
+
+/* Override default track background for player progress bar */
+.player-bar .progress-bar [data-radix-slider-track] {
+  @apply bg-accent;
+}
+
+.progress-bar:hover .progress {
+  @apply bg-primary;
+}
+
+.volume-controls {
+  @apply flex items-center w-[30%] justify-end gap-2;
+}
+
+.volume-btn {
+  @apply text-muted-foreground text-base;
+}
+
+.volume-slider-container {
+  @apply w-[100px];
+}
+
+.volume-slider {
+  @apply h-1 bg-accent rounded relative cursor-pointer;
+}
+
+.volume-progress {
+  @apply h-full bg-muted-foreground rounded w-1/2;
+}
+
+.volume-slider:hover .volume-progress {
+  @apply bg-primary;
+}
+
+/* Adjust play icon centering */
+.player-bar .play-btn svg {
+  transform: translateX(1px);
+}
+
+/* Fill player control icons */
+.player-bar .control-btn svg,
+.player-bar .volume-btn svg {
+  fill: currentColor;
+}

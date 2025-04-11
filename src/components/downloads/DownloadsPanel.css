@@ -1,0 +1,60 @@
+/* Downloads Panel */
+.downloads-panel {
+  @apply fixed bottom-[90px] right-4 w-[400px] bg-accent text-foreground shadow-lg rounded-tl-lg rounded-tr-lg z-10 transition-transform;
+}
+
+.downloads-panel.minimized {
+  @apply transform translate-y-[calc(100%-40px)];
+}
+
+.downloads-panel.minimized .downloads-list {
+  @apply hidden; /* Hide the list when minimized */
+}
+
+.panel-header {
+  @apply flex justify-between items-center py-2 px-4 border-b border-border;
+}
+
+.minimize-btn {
+  @apply text-sm text-muted-foreground;
+}
+
+.downloads-list {
+  @apply max-h-[300px] overflow-y-auto p-2;
+}
+
+.download-item {
+  @apply flex items-center gap-2 p-2 rounded mb-1;
+}
+
+.download-info {
+  @apply flex-1;
+}
+
+.download-title {
+  @apply font-medium text-sm;
+}
+
+.download-artist {
+  @apply text-muted-foreground text-xs;
+}
+
+.download-progress-container {
+  @apply w-[100px] h-[6px] bg-muted rounded overflow-hidden;
+}
+
+.download-status {
+  @apply text-xs text-muted-foreground w-[70px] text-right;
+}
+
+.download-status.success {
+  @apply text-green-500;
+}
+
+.download-status.error {
+  @apply text-red-500;
+}
+
+.empty-downloads {
+  @apply py-5 text-center text-muted-foreground;
+}

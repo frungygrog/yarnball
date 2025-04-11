@@ -1,0 +1,133 @@
+/* Songs Lists */
+.song-list-headers {
+  @apply grid grid-cols-[50px_1fr_1fr_120px_50px] gap-2 py-2 px-5 border-b border-border font-medium text-muted-foreground text-sm;
+}
+
+.song-list {
+  @apply mt-2;
+}
+
+.song-item {
+  @apply grid grid-cols-[50px_1fr_1fr_120px_50px] gap-2 py-3 px-5 rounded items-center;
+}
+
+.song-item:hover {
+  @apply bg-accent;
+}
+
+.song-number {
+  @apply text-muted-foreground text-sm;
+}
+
+.song-info {
+  @apply flex flex-col;
+}
+
+.song-title {
+  @apply font-medium;
+}
+
+.song-artist {
+  @apply text-muted-foreground text-sm;
+}
+
+.song-album {
+  @apply text-muted-foreground text-sm;
+}
+
+.song-duration {
+  @apply text-muted-foreground text-sm;
+}
+
+.song-actions {
+  @apply flex justify-end;
+}
+
+/* Album and Artist Grids */
+.albums-grid, .artists-grid {
+  @apply grid grid-cols-auto-fill-180 gap-5 mt-5;
+}
+
+.album-card, .artist-card {
+  @apply bg-accent rounded-lg overflow-hidden shadow-lg transition-transform cursor-pointer;
+}
+
+.album-card:hover, .artist-card:hover {
+  @apply transform -translate-y-1;
+}
+
+.album-image, .artist-image {
+  @apply w-full aspect-square object-cover;
+}
+
+.album-info, .artist-info {
+  /* Padding controlled by JSX */
+}
+
+.album-title, .artist-name {
+  @apply font-medium whitespace-nowrap overflow-hidden text-ellipsis; /* Removed mb-1 */
+}
+
+.album-artist {
+  @apply text-muted-foreground text-sm whitespace-nowrap overflow-hidden text-ellipsis;
+}
+
+/* Artist View / Album View */
+.artist-header, .album-header {
+  @apply flex flex-col gap-5 mb-8;
+}
+
+.back-button button {
+  @apply py-2 px-4 bg-accent rounded-full text-sm text-foreground;
+}
+
+/* Note: .artist-info and .album-info selectors are duplicated here and above.
+   Keeping both for now as they might have slightly different contexts,
+   but could be consolidated later if identical. */
+.artist-info, .album-info {
+  @apply flex items-center gap-5;
+}
+
+.artist-info h1, .album-info h1 {
+  @apply text-3xl text-foreground;
+}
+
+.heart-btn {
+  @apply text-xl text-muted-foreground;
+}
+
+.heart-btn:hover, .heart-btn.active {
+  @apply text-red-500;
+}
+
+.album-cover {
+  @apply w-[200px] h-[200px] rounded-lg overflow-hidden shadow-xl;
+}
+
+.album-cover img {
+  @apply w-full h-full object-cover;
+}
+
+.album-details {
+  @apply flex flex-col gap-2;
+}
+
+.album-details h3 {
+  @apply text-muted-foreground;
+}
+
+.download-album-btn {
+  @apply py-2 px-5 bg-primary text-white rounded-full font-medium mt-2 self-start;
+}
+
+.artist-content, .album-content {
+  @apply flex flex-col gap-10;
+}
+
+.artist-top-songs, .artist-albums {
+  @apply mb-5;
+}
+
+.artist-top-songs h3, .artist-albums h3 {
+  @apply mb-4 text-foreground text-xl;
+}

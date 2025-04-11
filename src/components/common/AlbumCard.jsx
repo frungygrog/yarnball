@@ -1,13 +1,20 @@
 import React from 'react';
 import { Check } from 'lucide-react';
 
+function getAlbumImageSrc(image) {
+  if (typeof image === 'string' && image.startsWith('/')) {
+    return `localfile://${image}`;
+  }
+  return image || '/api/placeholder/180/180';
+}
+
 const AlbumCard = ({ album, onClick, isDownloaded = false }) => {
   return (
     // Added cursor-pointer
     <div className="album-card flex flex-col cursor-pointer" data-id={album?.id} onClick={onClick}> 
       <div className="relative">
         <img 
-          src={album?.image || '/api/placeholder/180/180'} 
+          src={getAlbumImageSrc(album?.image)} 
           alt={album?.name || 'Unknown Album'} 
           className="album-image w-full aspect-square object-cover rounded-md" // Added rounded corners
         />

@@ -3,6 +3,7 @@ import { ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '../../lib/utils';
+import './DownloadsPanel.css'; // Import the component-specific CSS
 
 const DownloadsPanel = ({ downloads }) => {
   const [minimized, setMinimized] = useState(true);
@@ -53,6 +54,33 @@ const DownloadsPanel = ({ downloads }) => {
               )}>
                 {download.status}
               </div>
+              {/* Action buttons for in-progress downloads */}
+              {download.status !== 'Completed' && download.status !== 'Failed' && (
+                <div className="download-actions" style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'center', marginLeft: '8px' }}>
+                  <Button
+                    id={`cancel-download-${download.id}`}
+                    variant="ghost"
+                    size="lg"
+                    className="cancel-btn"
+                    title="Cancel download"
+                    style={{ fontSize: '1.5rem', width: '2.5rem', height: '2.5rem' }}
+                    onClick={() => download.onCancel && download.onCancel(download)}
+                  >
+                    &#10005;
+                  </Button>
+                  <Button
+                    id={`retry-download-${download.id}`}
+                    variant="ghost"
+                    size="lg"
+                    className="retry-btn"
+                    title="Try next peer"
+                    style={{ fontSize: '1.5rem', width: '2.5rem', height: '2.5rem' }}
+                    onClick={() => download.onRetry && download.onRetry(download)}
+                  >
+                    &#x21bb;
+                  </Button>
+                </div>
+              )}
             </div>
           ))
         )}

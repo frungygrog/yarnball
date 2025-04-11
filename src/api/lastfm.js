@@ -11,7 +11,7 @@ class LastFmAPI {
   async searchTrack(query) {
     logger.debug(`Searching for track: "${query}"`);
     try {
-      const response = await fetch(`${this.baseUrl}?method=track.search&track=${encodeURIComponent(query)}&api_key=${this.apiKey}&format=json&limit=5`);
+      const response = await fetch(`${this.baseUrl}?method=track.search&track=${encodeURIComponent(query)}&api_key=${this.apiKey}&format=json&limit=15`);
       const data = await response.json();
       
       if (data.error) {
@@ -68,7 +68,7 @@ class LastFmAPI {
   async searchAlbum(query) {
     logger.debug(`Searching for album: "${query}"`);
     try {
-      const response = await fetch(`${this.baseUrl}?method=album.search&album=${encodeURIComponent(query)}&api_key=${this.apiKey}&format=json&limit=5`);
+      const response = await fetch(`${this.baseUrl}?method=album.search&album=${encodeURIComponent(query)}&api_key=${this.apiKey}&format=json&limit=15`);
       const data = await response.json();
       
       if (data.error) {
@@ -87,7 +87,7 @@ class LastFmAPI {
   async searchArtist(query) {
     logger.debug(`Searching for artist: "${query}"`);
     try {
-      const response = await fetch(`${this.baseUrl}?method=artist.search&artist=${encodeURIComponent(query)}&api_key=${this.apiKey}&format=json&limit=5`);
+      const response = await fetch(`${this.baseUrl}?method=artist.search&artist=${encodeURIComponent(query)}&api_key=${this.apiKey}&format=json&limit=15`);
       const data = await response.json();
       
       if (data.error) {
